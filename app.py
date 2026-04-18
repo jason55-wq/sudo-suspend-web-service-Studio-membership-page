@@ -14,7 +14,9 @@ from models import Order, OrderItem, Product, User
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    Path(app.config["MEMBER_FILES_DIR"]).mkdir(parents=True, exist_ok=True)
+
+    member_dir = Path(app.config["MEMBER_FILES_DIR"])
+    member_dir.mkdir(parents=True, exist_ok=True)
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -42,18 +44,13 @@ def ensure_schema():
         ensure_column("orders", "buyer_phone", "buyer_phone VARCHAR(40) NOT NULL DEFAULT ''")
         ensure_column("orders", "buyer_email", "buyer_email VARCHAR(255) NOT NULL DEFAULT ''")
         ensure_column("products", "price", "price INTEGER NOT NULL DEFAULT 0")
-        ensure_column(
-            "order_items",
-            "unit_price",
-            "unit_price INTEGER NOT NULL DEFAULT 0",
-        )
+        ensure_column("order_items", "unit_price", "unit_price INTEGER NOT NULL DEFAULT 0")
+
         connection.exec_driver_sql(
             "UPDATE orders SET status = 'approved' WHERE status IS NULL OR status = ''"
         )
         connection.exec_driver_sql("UPDATE products SET price = 0 WHERE price IS NULL")
-        connection.exec_driver_sql(
-            "UPDATE order_items SET unit_price = 0 WHERE unit_price IS NULL"
-        )
+        connection.exec_driver_sql("UPDATE order_items SET unit_price = 0 WHERE unit_price IS NULL")
 
 
 def register_routes(app):
@@ -156,47 +153,20 @@ def register_routes(app):
 
         return candidate.relative_to(base_dir).as_posix()
 
-    def member_file_base_dirs() -> list[Path]:
-        configured_dir = Path(app.config["MEMBER_FILES_DIR"]).resolve(strict=False)
-        project_member_dir = (Path(__file__).resolve().parent / "member_files").resolve(strict=False)
-        project_data_member_dir = (
-            Path(__file__).resolve().parent / "data" / "member_files"
-        ).resolve(strict=False)
-
-        unique_dirs: list[Path] = []
-        seen: set[str] = set()
-        for base_dir in [configured_dir, project_member_dir, project_data_member_dir]:
-            key = str(base_dir).lower()
-            if key not in seen:
-                unique_dirs.append(base_dir)
-                seen.add(key)
-        return unique_dirs
-
     def resolve_member_file_path(stored_value: str) -> Path:
+        base_dir = Path(app.config["MEMBER_FILES_DIR"]).resolve(strict=False)
         stored = Path(stored_value.strip().strip('"'))
+        candidate = (base_dir / stored).resolve(strict=False)
 
-        if stored.is_absolute():
-            candidate = stored.resolve(strict=False)
-            if candidate.exists():
-                return candidate
+        try:
+            candidate.relative_to(base_dir)
+        except ValueError as exc:
+            raise ValueError("找不到會員檔案") from exc
+
+        if not candidate.exists() or not candidate.is_file():
             raise ValueError("找不到會員檔案")
 
-        for base_dir in member_file_base_dirs():
-            relative = stored
-            parts = stored.parts
-            if parts and parts[0].lower() == base_dir.name.lower():
-                relative = Path(*parts[1:])
-
-            candidate = (base_dir / relative).resolve(strict=False)
-            try:
-                candidate.relative_to(base_dir)
-            except ValueError:
-                continue
-
-            if candidate.exists():
-                return candidate
-
-        raise ValueError("找不到會員檔案")
+        return candidate
 
     @app.context_processor
     def inject_globals():
@@ -315,20 +285,18 @@ def register_routes(app):
 
         if not buyer_name or not buyer_phone or not buyer_email:
             flash("請填寫購買人姓名、手機與電子郵件。", "error")
-            catalog = get_member_catalog(current_user.id)
-            owned_products = get_user_products(current_user.id)
-            return render_template(
-                "dashboard.html",
-                catalog=catalog,
-                products=owned_products,
-            )
+            return redirect(url_for("dashboard"))
 
-        order = Order(user_id=current_user.id, status="pending")
-        order.buyer_name = buyer_name
-        order.buyer_phone = buyer_phone
-        order.buyer_email = buyer_email
+        order = Order(
+            user_id=current_user.id,
+            status="pending",
+            buyer_name=buyer_name,
+            buyer_phone=buyer_phone,
+            buyer_email=buyer_email,
+        )
         db.session.add(order)
         db.session.flush()
+
         db.session.add(
             OrderItem(
                 order_id=order.id,
@@ -367,9 +335,6 @@ def register_routes(app):
         except ValueError:
             abort(404)
 
-        if not file_path.exists() or not file_path.is_file():
-            abort(404)
-
         return send_file(file_path, as_attachment=True, download_name=file_path.name)
 
     @app.route("/admin/products/new", methods=["GET", "POST"])
@@ -392,13 +357,9 @@ def register_routes(app):
 
             try:
                 file_path = normalize_member_file_path(file_path_raw)
+                resolve_member_file_path(file_path)
             except ValueError as exc:
                 flash(str(exc), "error")
-                return render_template("admin_product_new.html")
-
-            candidate = resolve_member_file_path(file_path)
-            if not candidate.exists() or not candidate.is_file():
-                flash(f"找不到檔案：{candidate}", "error")
                 return render_template("admin_product_new.html")
 
             product = Product(
@@ -470,6 +431,7 @@ def register_routes(app):
             order = Order(user_id=user.id, status="approved")
             db.session.add(order)
             db.session.flush()
+
             db.session.add(
                 OrderItem(
                     order_id=order.id,
