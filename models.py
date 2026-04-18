@@ -52,3 +52,11 @@ class OrderItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
     unit_price = db.Column(db.Integer, nullable=False, default=0)
+
+
+class SiteStat(db.Model):
+    __tablename__ = "site_stats"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    value = db.Column(db.Integer, nullable=False, default=0)

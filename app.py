@@ -8,7 +8,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import Config
 from extensions import db, login_manager
-from models import Order, OrderItem, Product, User
+from models import Order, OrderItem, Product, SiteStat, User
 
 
 def create_app():
@@ -48,6 +48,18 @@ def ensure_schema():
         )
         connection.exec_driver_sql("UPDATE products SET price = 0 WHERE price IS NULL")
         connection.exec_driver_sql("UPDATE order_items SET unit_price = 0 WHERE unit_price IS NULL")
+
+
+def increment_site_visit_count():
+    stat = SiteStat.query.filter_by(name="home_visits").first()
+    if stat is None:
+        stat = SiteStat(name="home_visits", value=1)
+        db.session.add(stat)
+    else:
+        stat.value += 1
+
+    db.session.commit()
+    return stat.value
 
 
 def register_routes(app):
@@ -183,9 +195,10 @@ def register_routes(app):
 
     @app.route("/")
     def index():
+        visit_count = increment_site_visit_count()
         if current_user.is_authenticated:
             return redirect(url_for("dashboard"))
-        return render_template("index.html")
+        return render_template("index.html", visit_count=visit_count)
 
     @app.route("/register", methods=["GET", "POST"])
     def register():

@@ -2,8 +2,9 @@
 
 {% block content %}
 <section class="hero">
-  <h1>本機會員與產品下載管理</h1>
-  <p>Flask + SQLite 的地端 MVP。會員登入後只能看到自己已購買的產品，下載也會由後端檢查權限。</p>
+  <h1>歡迎來到工作室會員系統</h1>
+  <p>這是一個提供會員登入、商品管理與檔案下載的系統。</p>
+  <p class="meta">目前瀏覽人次：<strong>{{ visit_count }}</strong></p>
   <div class="actions">
     <a class="btn primary" href="{{ url_for('register') }}">註冊</a>
     <a class="btn" href="{{ url_for('login') }}">登入</a>
