@@ -528,6 +528,18 @@ def register_routes(app):
             user_summary.append({"user": user, "products": products})
         return render_template("admin_users.html", user_summary=user_summary)
 
+    @app.route("/admin/member-check")
+    @login_required
+    @admin_required
+    def admin_member_check():
+        users = User.query.order_by(User.created_at.desc()).all()
+        return render_template(
+            "admin_member_check.html",
+            member_count=len(users),
+            latest_member=users[0] if users else None,
+            users=users[:10],
+        )
+
     return app
 
 

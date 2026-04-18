@@ -2,12 +2,13 @@
 
 {% block content %}
 <section class="panel">
-  <h1>會員總覽</h1>
+  <h1>會員列表</h1>
+  <p class="muted">會員總數：{{ user_summary|length }}</p>
   <div class="grid">
     {% for row in user_summary %}
       <article class="card">
         <h2>{{ row.user.username }}</h2>
-        <p class="meta">角色：{{ "管理員" if row.user.is_admin else "會員" }}</p>
+        <p class="meta">{{ "管理員" if row.user.is_admin else "一般會員" }}</p>
         <p class="meta">已購買商品數：{{ row.products|length }}</p>
         {% if row.products %}
           <ul class="list">
