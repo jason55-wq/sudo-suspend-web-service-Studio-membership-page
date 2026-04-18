@@ -23,6 +23,7 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False, index=True)
     description = db.Column(db.Text, nullable=False, default="")
+    price = db.Column(db.Integer, nullable=False, default=0)
     file_path = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
@@ -52,3 +53,4 @@ class OrderItem(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
     quantity = db.Column(db.Integer, nullable=False, default=1)
+    unit_price = db.Column(db.Integer, nullable=False, default=0)

@@ -4,8 +4,8 @@
 <section class="panel">
   <div class="section-head">
     <div>
-      <h1>產品中心</h1>
-      <p class="muted">會員可以先看到所有上架產品，申請購買後等待管理員審核，核准後才能下載。</p>
+      <h1>會員商品</h1>
+      <p class="muted">你可以先看價格，再決定是否送出購買申請；核准後就能下載。</p>
     </div>
   </div>
 
@@ -22,52 +22,54 @@
             {% elif item.status == "rejected" %}
               <span class="status-tag rejected">已拒絕</span>
             {% else %}
-              <span class="status-tag available">可申請</span>
+              <span class="status-tag available">可購買</span>
             {% endif %}
           </div>
 
-          <p>{{ item.product.description or "暫無說明" }}</p>
+          <p class="meta">{{ item.product.price|currency }}</p>
+          <p>{{ item.product.description or "沒有描述" }}</p>
 
           {% if item.status == "approved" %}
-            <p class="meta">已通過審核，現在可以下載。</p>
-            <a class="btn primary" href="{{ url_for('download', product_id=item.product.id) }}">下載</a>
+            <p class="meta">你已完成購買，可以直接下載。</p>
+            <a class="btn primary" href="{{ url_for('download', product_id=item.product.id) }}">下載檔案</a>
           {% elif item.status == "pending" %}
-            <p class="meta">你的申請已送出，請等管理員審核。</p>
+            <p class="meta">購買申請已送出，等待管理員審核。</p>
             <button class="btn" type="button" disabled>審核中</button>
           {% elif item.status == "rejected" %}
-            <p class="meta">這筆申請已被拒絕，你可以重新申請。</p>
+            <p class="meta">申請被拒絕，你可以重新送出購買申請。</p>
             <form method="post" action="{{ url_for('request_purchase', product_id=item.product.id) }}">
-              <button class="btn primary" type="submit">重新申請購買</button>
+              <button class="btn primary" type="submit">重新購買</button>
             </form>
           {% else %}
-            <p class="meta">目前尚未申請，送出後會進入審核流程。</p>
+            <p class="meta">尚未購買，送出申請後等待審核。</p>
             <form method="post" action="{{ url_for('request_purchase', product_id=item.product.id) }}">
-              <button class="btn primary" type="submit">申請購買</button>
+              <button class="btn primary" type="submit">購買</button>
             </form>
           {% endif %}
         </article>
       {% endfor %}
     </div>
   {% else %}
-    <p>目前還沒有上架產品。</p>
+    <p>目前沒有可購買的商品。</p>
   {% endif %}
 </section>
 
 <section class="panel" style="margin-top: 20px;">
-  <h2>已核准下載</h2>
+  <h2>已購買商品</h2>
 
   {% if products %}
     <div class="grid">
       {% for product in products %}
         <article class="card">
           <h3>{{ product.name }}</h3>
-          <p>{{ product.description or "暫無說明" }}</p>
-          <a class="btn primary" href="{{ url_for('download', product_id=product.id) }}">下載</a>
+          <p class="meta">{{ product.price|currency }}</p>
+          <p>{{ product.description or "沒有描述" }}</p>
+          <a class="btn primary" href="{{ url_for('download', product_id=product.id) }}">下載檔案</a>
         </article>
       {% endfor %}
     </div>
   {% else %}
-    <p class="muted">你目前還沒有可下載的產品。</p>
+    <p class="muted">目前沒有已購買的商品。</p>
   {% endif %}
 </section>
 {% endblock %}

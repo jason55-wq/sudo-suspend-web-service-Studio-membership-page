@@ -3,6 +3,7 @@ from pathlib import Path
 
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, url_for
 from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy import inspect
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import Config
@@ -27,22 +28,30 @@ def create_app():
 
 
 def ensure_schema():
-    if db.engine.dialect.name != "sqlite":
-        return
-
     with db.engine.begin() as connection:
-        columns = {
-            row[1]
-            for row in connection.exec_driver_sql("PRAGMA table_info(orders)").fetchall()
-        }
-        if "status" not in columns:
-            connection.exec_driver_sql(
-                "ALTER TABLE orders ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'approved'"
-            )
-        else:
-            connection.exec_driver_sql(
-                "UPDATE orders SET status = 'approved' WHERE status IS NULL OR status = ''"
-            )
+        inspector = inspect(connection)
+
+        def ensure_column(table_name: str, column_name: str, column_definition: str):
+            columns = {column["name"] for column in inspector.get_columns(table_name)}
+            if column_name not in columns:
+                connection.exec_driver_sql(
+                    f"ALTER TABLE {table_name} ADD COLUMN {column_definition}"
+                )
+
+        ensure_column("orders", "status", "status VARCHAR(20) NOT NULL DEFAULT 'approved'")
+        ensure_column("products", "price", "price INTEGER NOT NULL DEFAULT 0")
+        ensure_column(
+            "order_items",
+            "unit_price",
+            "unit_price INTEGER NOT NULL DEFAULT 0",
+        )
+        connection.exec_driver_sql(
+            "UPDATE orders SET status = 'approved' WHERE status IS NULL OR status = ''"
+        )
+        connection.exec_driver_sql("UPDATE products SET price = 0 WHERE price IS NULL")
+        connection.exec_driver_sql(
+            "UPDATE order_items SET unit_price = 0 WHERE unit_price IS NULL"
+        )
 
 
 def register_routes(app):
@@ -195,6 +204,14 @@ def register_routes(app):
     def inject_admin_products():
         return {"admin_products": Product.query.order_by(Product.created_at.desc()).all()}
 
+    @app.template_filter("currency")
+    def format_currency(value):
+        try:
+            amount = int(value or 0)
+        except (TypeError, ValueError):
+            amount = 0
+        return f"NT$ {amount:,}"
+
     @app.route("/")
     def index():
         if current_user.is_authenticated:
@@ -289,10 +306,17 @@ def register_routes(app):
         order = Order(user_id=current_user.id, status="pending")
         db.session.add(order)
         db.session.flush()
-        db.session.add(OrderItem(order_id=order.id, product_id=product.id, quantity=1))
+        db.session.add(
+            OrderItem(
+                order_id=order.id,
+                product_id=product.id,
+                quantity=1,
+                unit_price=product.price,
+            )
+        )
         db.session.commit()
 
-        flash("購買申請已送出，等待管理員審核。", "success")
+        flash(f"購買申請已送出，金額為 {format_currency(product.price)}，等待管理員審核。", "success")
         return redirect(url_for("dashboard"))
 
     @app.route("/download/<int:product_id>")
@@ -332,10 +356,15 @@ def register_routes(app):
         if request.method == "POST":
             name = request.form.get("name", "").strip()
             description = request.form.get("description", "").strip()
+            price = request.form.get("price", type=int)
             file_path_raw = request.form.get("file_path", "").strip()
 
             if not name or not file_path_raw:
-                flash("請輸入產品名稱與檔案路徑。", "error")
+                flash("請輸入產品名稱、價格與檔案路徑。", "error")
+                return render_template("admin_product_new.html")
+
+            if price is None or price < 0:
+                flash("請輸入有效的產品價格。", "error")
                 return render_template("admin_product_new.html")
 
             try:
@@ -349,7 +378,12 @@ def register_routes(app):
                 flash(f"找不到檔案：{candidate}", "error")
                 return render_template("admin_product_new.html")
 
-            product = Product(name=name, description=description, file_path=file_path)
+            product = Product(
+                name=name,
+                description=description,
+                price=price,
+                file_path=file_path,
+            )
             db.session.add(product)
             db.session.commit()
             flash("產品已建立。", "success")
@@ -370,6 +404,27 @@ def register_routes(app):
         db.session.commit()
         flash("產品已刪除。", "success")
         return redirect(url_for("admin_new_product"))
+
+    @app.route("/admin/products/<int:product_id>/edit", methods=["GET", "POST"])
+    @login_required
+    @admin_required
+    def admin_edit_product(product_id):
+        product = db.session.get(Product, product_id)
+        if not product:
+            abort(404)
+
+        if request.method == "POST":
+            price = request.form.get("price", type=int)
+            if price is None or price < 0:
+                flash("請輸入有效的產品價格。", "error")
+                return render_template("admin_product_edit.html", product=product)
+
+            product.price = price
+            db.session.commit()
+            flash("產品價格已更新。", "success")
+            return redirect(url_for("admin_new_product"))
+
+        return render_template("admin_product_edit.html", product=product)
 
     @app.route("/admin/orders/new", methods=["GET", "POST"])
     @login_required
@@ -392,7 +447,14 @@ def register_routes(app):
             order = Order(user_id=user.id, status="approved")
             db.session.add(order)
             db.session.flush()
-            db.session.add(OrderItem(order_id=order.id, product_id=product.id, quantity=1))
+            db.session.add(
+                OrderItem(
+                    order_id=order.id,
+                    product_id=product.id,
+                    quantity=1,
+                    unit_price=product.price,
+                )
+            )
             db.session.commit()
 
             flash("已建立購買紀錄。", "success")

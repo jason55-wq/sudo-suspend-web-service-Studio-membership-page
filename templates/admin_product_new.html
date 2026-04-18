@@ -2,42 +2,49 @@
 
 {% block content %}
 <section class="panel">
-  <h1>新增商品</h1>
+  <h1>新增產品</h1>
   <form method="post" class="form">
     <label>名稱
       <input type="text" name="name" required>
     </label>
-    <label>說明
+    <label>價格
+      <input type="number" name="price" min="0" step="1" value="0" required>
+    </label>
+    <label>描述
       <textarea name="description" rows="5"></textarea>
     </label>
     <label>檔案路徑
       <input type="text" name="file_path" placeholder="member_files/Git_Tutorial_1.pdf" required>
     </label>
-    <button class="btn primary" type="submit">送出</button>
+    <button class="btn primary" type="submit">建立產品</button>
   </form>
   <p class="muted">
-    檔案請放在 <code>member_files/</code> 底下，路徑請填相對路徑，例如
+    檔案路徑必須位於 <code>member_files/</code> 內，例如
     <code>member_files/Git_Tutorial_1.pdf</code> 或 <code>member_files/subfolder/manual.pdf</code>。
   </p>
 </section>
 
 <section class="panel" style="margin-top: 20px;">
-  <h2>目前商品</h2>
+  <h2>目前產品</h2>
   {% if admin_products %}
     <div class="grid">
       {% for product in admin_products %}
         <article class="card">
           <h3>{{ product.name }}</h3>
-          <p>{{ product.description or "沒有說明" }}</p>
+          <p class="meta">{{ product.price|currency }}</p>
+          <p>{{ product.description or "沒有描述" }}</p>
           <p class="meta">檔案路徑：{{ product.file_path }}</p>
-          <form method="post" action="{{ url_for('admin_delete_product', product_id=product.id) }}" onsubmit="return confirm('確定要刪除這個商品嗎？');">
-            <button class="btn" type="submit">刪除商品</button>
-          </form>
+          <div class="card-actions">
+            <a class="btn" href="{{ url_for('admin_edit_product', product_id=product.id) }}">編輯價格</a>
+            <form method="post" action="{{ url_for('admin_delete_product', product_id=product.id) }}" onsubmit="return confirm('確定要刪除這個產品嗎？');">
+              <button class="btn" type="submit">刪除產品</button>
+            </form>
+          </div>
         </article>
       {% endfor %}
     </div>
   {% else %}
-    <p>目前沒有商品。</p>
+    <p>目前沒有產品。</p>
   {% endif %}
 </section>
 {% endblock %}

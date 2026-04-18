@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+  <h1>編輯產品價格</h1>
+  <p class="muted">只更新價格，不會改動產品名稱、描述或檔案路徑。</p>
+
+  <form method="post" class="form">
+    <label>產品名稱
+      <input type="text" value="{{ product.name }}" disabled>
+    </label>
+    <label>目前價格
+      <input type="text" value="{{ product.price|currency }}" disabled>
+    </label>
+    <label>新價格
+      <input type="number" name="price" min="0" step="1" value="{{ product.price }}" required>
+    </label>
+    <button class="btn primary" type="submit">儲存變更</button>
+    <a class="btn" href="{{ url_for('admin_new_product') }}">返回</a>
+  </form>
+</section>
+{% endblock %}
