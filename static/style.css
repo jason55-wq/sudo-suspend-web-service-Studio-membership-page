@@ -1,0 +1,236 @@
+:root {
+  --bg: #f3efe7;
+  --panel: #fffaf2;
+  --ink: #1f1b16;
+  --muted: #6b6258;
+  --accent: #2f6b58;
+  --accent-2: #915f2e;
+  --border: #d9cdbd;
+  --shadow: 0 18px 45px rgba(56, 43, 26, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(47, 107, 88, 0.14), transparent 30%),
+    radial-gradient(circle at top right, rgba(145, 95, 46, 0.14), transparent 25%),
+    linear-gradient(180deg, #fcfbf7 0%, var(--bg) 100%);
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 28px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 250, 242, 0.82);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+}
+
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.nav {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.nav a,
+.actions a,
+.btn {
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.container {
+  width: min(1100px, calc(100% - 32px));
+  margin: 32px auto 48px;
+}
+
+.hero,
+.panel,
+.card {
+  background: var(--panel);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
+  border-radius: 22px;
+}
+
+.hero {
+  padding: 40px;
+}
+
+.panel {
+  padding: 30px;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.form label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: white;
+  font: inherit;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: white;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  padding: 20px;
+}
+
+.section-head,
+.card-top,
+.card-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.section-head,
+.card-top {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.card-actions {
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.card-actions form {
+  margin: 0;
+}
+
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-tag.available {
+  background: #eef6ec;
+  color: #2f6b58;
+}
+
+.status-tag.pending {
+  background: #f6eddc;
+  color: #915f2e;
+}
+
+.status-tag.approved {
+  background: #e6f5ee;
+  color: #24654f;
+}
+
+.status-tag.rejected {
+  background: #fdeaea;
+  color: #8e3b3b;
+}
+
+.flash-wrap {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.flash {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.flash.success {
+  background: #e6f5ee;
+}
+
+.flash.error {
+  background: #fdeaea;
+}
+
+.muted,
+.meta {
+  color: var(--muted);
+}
+
+.list {
+  padding-left: 18px;
+}
+
+code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    padding: 16px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hero,
+  .panel {
+    padding: 22px;
+  }
+}

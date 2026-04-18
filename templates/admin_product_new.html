@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+  <h1>建立產品</h1>
+  <form method="post" class="form">
+    <label>名稱
+      <input type="text" name="name" required>
+    </label>
+    <label>說明
+      <textarea name="description" rows="5"></textarea>
+    </label>
+    <label>檔案路徑
+      <input type="text" name="file_path" placeholder="例如：Git_Tutorial_1.pdf" required>
+    </label>
+    <button class="btn primary" type="submit">儲存</button>
+  </form>
+  <p class="muted">檔案會從 <code>D:\member</code> 讀取。請直接填檔名或子資料夾路徑，例如 <code>Git_Tutorial_1.pdf</code> 或 <code>subfolder\manual.pdf</code>。</p>
+</section>
+
+<section class="panel" style="margin-top: 20px;">
+  <h2>現有產品</h2>
+  {% if admin_products %}
+    <div class="grid">
+      {% for product in admin_products %}
+        <article class="card">
+          <h3>{{ product.name }}</h3>
+          <p>{{ product.description or "沒有說明" }}</p>
+          <p class="meta">檔案路徑：{{ product.file_path }}</p>
+          <form method="post" action="{{ url_for('admin_delete_product', product_id=product.id) }}" onsubmit="return confirm('確定要刪除這個產品嗎？');">
+            <button class="btn" type="submit">刪除產品</button>
+          </form>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>目前沒有產品。</p>
+  {% endif %}
+</section>
+{% endblock %}

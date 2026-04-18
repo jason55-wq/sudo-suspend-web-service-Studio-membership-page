@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+  <h1>註冊</h1>
+  <form method="post" class="form">
+    <label>帳號
+      <input type="text" name="username" required>
+    </label>
+    <label>密碼
+      <input type="password" name="password" required>
+    </label>
+    <button class="btn primary" type="submit">建立帳號</button>
+  </form>
+  <p class="muted">第一個註冊的會員會自動成為管理員，方便建立產品與訂單。</p>
+</section>
+{% endblock %}

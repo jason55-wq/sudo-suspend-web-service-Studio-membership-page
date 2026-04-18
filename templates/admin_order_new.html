@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="panel">
+  <h1>管理員發單</h1>
+  <p class="muted">這裡可以直接替會員建立已核准訂單，也可以處理會員送出的待審核申請。</p>
+
+  <form method="post" class="form">
+    <label>會員
+      <select name="user_id" required>
+        <option value="">請選擇會員</option>
+        {% for user in users %}
+          <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>產品
+      <select name="product_id" required>
+        <option value="">請選擇產品</option>
+        {% for product in products %}
+          <option value="{{ product.id }}">{{ product.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="btn primary" type="submit">直接核准發單</button>
+  </form>
+</section>
+
+<section class="panel" style="margin-top: 20px;">
+  <h2>待審核申請</h2>
+  {% if pending_orders %}
+    <div class="grid">
+      {% for order in pending_orders %}
+        <article class="card">
+          <h3>{{ order.user.username }}</h3>
+          {% if order.items %}
+            <p>{{ order.items[0].product.name }}</p>
+          {% endif %}
+          <p class="meta">申請時間：{{ order.created_at }}</p>
+          <div class="card-actions">
+            <form method="post" action="{{ url_for('admin_approve_order', order_id=order.id) }}">
+              <button class="btn primary" type="submit">核准</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_reject_order', order_id=order.id) }}">
+              <button class="btn" type="submit">拒絕</button>
+            </form>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="muted">目前沒有待審核申請。</p>
+  {% endif %}
+</section>
+
+<section class="panel" style="margin-top: 20px;">
+  <h2>所有產品</h2>
+  {% if admin_products %}
+    <div class="grid">
+      {% for product in admin_products %}
+        <article class="card">
+          <h3>{{ product.name }}</h3>
+          <p>{{ product.description or "暫無說明" }}</p>
+          <p class="meta">檔案：{{ product.file_path }}</p>
+          <form method="post" action="{{ url_for('admin_delete_product', product_id=product.id) }}" onsubmit="return confirm('確定要刪除這個產品嗎？');">
+            <button class="btn" type="submit">刪除產品</button>
+          </form>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>目前沒有產品。</p>
+  {% endif %}
+</section>
+{% endblock %}

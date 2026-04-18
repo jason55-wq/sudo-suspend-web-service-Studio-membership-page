@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <h1>本機會員與產品下載管理</h1>
+  <p>Flask + SQLite 的地端 MVP。會員登入後只能看到自己已購買的產品，下載也會由後端檢查權限。</p>
+  <div class="actions">
+    <a class="btn primary" href="{{ url_for('register') }}">註冊</a>
+    <a class="btn" href="{{ url_for('login') }}">登入</a>
+  </div>
+</section>
+{% endblock %}
