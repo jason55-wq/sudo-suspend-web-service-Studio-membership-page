@@ -29,9 +29,8 @@ def create_app():
 
 def ensure_schema():
     with db.engine.begin() as connection:
-        inspector = inspect(connection)
-
         def ensure_column(table_name: str, column_name: str, column_definition: str):
+            inspector = inspect(connection)
             columns = {column["name"] for column in inspector.get_columns(table_name)}
             if column_name not in columns:
                 connection.exec_driver_sql(
@@ -39,6 +38,9 @@ def ensure_schema():
                 )
 
         ensure_column("orders", "status", "status VARCHAR(20) NOT NULL DEFAULT 'approved'")
+        ensure_column("orders", "buyer_name", "buyer_name VARCHAR(120) NOT NULL DEFAULT ''")
+        ensure_column("orders", "buyer_phone", "buyer_phone VARCHAR(40) NOT NULL DEFAULT ''")
+        ensure_column("orders", "buyer_email", "buyer_email VARCHAR(255) NOT NULL DEFAULT ''")
         ensure_column("products", "price", "price INTEGER NOT NULL DEFAULT 0")
         ensure_column(
             "order_items",
@@ -303,7 +305,24 @@ def register_routes(app):
             flash("你的購買申請已送出，請等管理員審核。", "success")
             return redirect(url_for("dashboard"))
 
+        buyer_name = request.form.get("buyer_name", "").strip()
+        buyer_phone = request.form.get("buyer_phone", "").strip()
+        buyer_email = request.form.get("buyer_email", "").strip()
+
+        if not buyer_name or not buyer_phone or not buyer_email:
+            flash("請填寫購買人姓名、手機與電子郵件。", "error")
+            catalog = get_member_catalog(current_user.id)
+            owned_products = get_user_products(current_user.id)
+            return render_template(
+                "dashboard.html",
+                catalog=catalog,
+                products=owned_products,
+            )
+
         order = Order(user_id=current_user.id, status="pending")
+        order.buyer_name = buyer_name
+        order.buyer_phone = buyer_phone
+        order.buyer_email = buyer_email
         db.session.add(order)
         db.session.flush()
         db.session.add(

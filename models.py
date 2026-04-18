@@ -35,6 +35,9 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    buyer_name = db.Column(db.String(120), nullable=False, default="")
+    buyer_phone = db.Column(db.String(40), nullable=False, default="")
+    buyer_email = db.Column(db.String(255), nullable=False, default="")
     status = db.Column(db.String(20), nullable=False, default="approved", index=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 

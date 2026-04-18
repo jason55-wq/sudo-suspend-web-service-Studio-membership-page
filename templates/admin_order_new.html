@@ -3,7 +3,7 @@
 {% block content %}
 <section class="panel">
   <h1>建立購買紀錄</h1>
-  <p class="muted">這裡是管理員手動建立已核准的購買紀錄。</p>
+  <p class="muted">管理員可以手動建立已核准的購買紀錄。</p>
 
   <form method="post" class="form">
     <label>會員
@@ -22,7 +22,7 @@
         {% endfor %}
       </select>
     </label>
-    <button class="btn primary" type="submit">建立紀錄</button>
+    <button class="btn primary" type="submit">建立購買紀錄</button>
   </form>
 </section>
 
@@ -33,6 +33,9 @@
       {% for order in pending_orders %}
         <article class="card">
           <h3>{{ order.user.username }}</h3>
+          <p class="meta">姓名：{{ order.buyer_name or "未填寫" }}</p>
+          <p class="meta">手機：{{ order.buyer_phone or "未填寫" }}</p>
+          <p class="meta">Email：{{ order.buyer_email or "未填寫" }}</p>
           {% if order.items %}
             <p>{{ order.items[0].product.name }}</p>
             <p class="meta">{{ order.items[0].unit_price|currency }}</p>
@@ -50,19 +53,19 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="muted">目前沒有待審核的申請。</p>
+    <p class="muted">目前沒有待審核的購買申請。</p>
   {% endif %}
 </section>
 
 <section class="panel" style="margin-top: 20px;">
-  <h2>目前產品</h2>
+  <h2>產品清單</h2>
   {% if admin_products %}
     <div class="grid">
       {% for product in admin_products %}
         <article class="card">
           <h3>{{ product.name }}</h3>
           <p class="meta">{{ product.price|currency }}</p>
-          <p>{{ product.description or "沒有描述" }}</p>
+          <p>{{ product.description or "尚無商品說明" }}</p>
           <p class="meta">檔案路徑：{{ product.file_path }}</p>
           <div class="card-actions">
             <a class="btn" href="{{ url_for('admin_edit_product', product_id=product.id) }}">編輯價格</a>
