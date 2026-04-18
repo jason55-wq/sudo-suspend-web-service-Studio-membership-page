@@ -12,4 +12,4 @@ class Config:
         f"sqlite:///{(BASE_DIR / 'member.db').as_posix()}",
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MEMBER_FILES_DIR = Path(os.getenv("MEMBER_FILES_DIR", r"D:\member"))
+    MEMBER_FILES_DIR = Path(os.getenv("MEMBER_FILES_DIR", str(BASE_DIR / "member_files")))

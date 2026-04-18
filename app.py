@@ -13,6 +13,7 @@ from models import Order, OrderItem, Product, User
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    Path(app.config["MEMBER_FILES_DIR"]).mkdir(parents=True, exist_ok=True)
 
     db.init_app(app)
     login_manager.init_app(app)
