@@ -1,4 +1,4 @@
-from functools import wraps
+﻿from functools import wraps
 from pathlib import Path
 
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, url_for
@@ -141,28 +141,51 @@ def register_routes(app):
         try:
             candidate.relative_to(base_dir)
         except ValueError as exc:
-            raise ValueError("檔案路徑必須位於 D:\\member 底下。") from exc
+            raise ValueError("檔案路徑必須位於會員檔案資料夾內。") from exc
 
         return candidate.relative_to(base_dir).as_posix()
 
+    def member_file_base_dirs() -> list[Path]:
+        configured_dir = Path(app.config["MEMBER_FILES_DIR"]).resolve(strict=False)
+        project_member_dir = (Path(__file__).resolve().parent / "member_files").resolve(strict=False)
+        project_data_member_dir = (
+            Path(__file__).resolve().parent / "data" / "member_files"
+        ).resolve(strict=False)
+
+        unique_dirs: list[Path] = []
+        seen: set[str] = set()
+        for base_dir in [configured_dir, project_member_dir, project_data_member_dir]:
+            key = str(base_dir).lower()
+            if key not in seen:
+                unique_dirs.append(base_dir)
+                seen.add(key)
+        return unique_dirs
+
     def resolve_member_file_path(stored_value: str) -> Path:
-        base_dir = Path(app.config["MEMBER_FILES_DIR"]).resolve(strict=False)
         stored = Path(stored_value.strip().strip('"'))
 
         if stored.is_absolute():
             candidate = stored.resolve(strict=False)
-        else:
+            if candidate.exists():
+                return candidate
+            raise ValueError("找不到會員檔案")
+
+        for base_dir in member_file_base_dirs():
+            relative = stored
             parts = stored.parts
             if parts and parts[0].lower() == base_dir.name.lower():
-                stored = Path(*parts[1:])
-            candidate = (base_dir / stored).resolve(strict=False)
+                relative = Path(*parts[1:])
 
-        try:
-            candidate.relative_to(base_dir)
-        except ValueError as exc:
-            raise ValueError("檔案路徑不在允許的資料夾內。") from exc
+            candidate = (base_dir / relative).resolve(strict=False)
+            try:
+                candidate.relative_to(base_dir)
+            except ValueError:
+                continue
 
-        return candidate
+            if candidate.exists():
+                return candidate
+
+        raise ValueError("找不到會員檔案")
 
     @app.context_processor
     def inject_globals():
