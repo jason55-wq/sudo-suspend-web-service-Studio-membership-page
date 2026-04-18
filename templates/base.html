@@ -40,14 +40,16 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="site-footer">
-    <div class="site-footer-inner">
-      <strong>網站負責人聯絡方式</strong>
-      <div class="site-footer-contact">
-        <span>電話：<a href="tel:0978705853">0978705853</a></span>
-        <span>LINE：<a href="https://line.me/ti/p/~we252668" target="_blank" rel="noopener noreferrer">we252668</a></span>
+  {% if request.endpoint in ['login', 'register'] %}
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <strong>網站負責人聯絡方式</strong>
+        <div class="site-footer-contact">
+          <span>電話：<a href="tel:0978705853">0978705853</a></span>
+          <span>LINE：<a href="https://line.me/ti/p/~we252668" target="_blank" rel="noopener noreferrer">we252668</a></span>
+        </div>
       </div>
-    </div>
-  </footer>
+    </footer>
+  {% endif %}
 </body>
 </html>
