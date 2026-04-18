@@ -60,6 +60,29 @@ body {
   margin: 32px auto 48px;
 }
 
+.site-footer {
+  margin-top: 32px;
+  padding: 22px 28px 30px;
+}
+
+.site-footer-inner {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 18px 22px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 250, 242, 0.78);
+  box-shadow: var(--shadow);
+}
+
+.site-footer-contact {
+  display: flex;
+  gap: 14px 22px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  color: var(--muted);
+}
+
 .hero,
 .panel,
 .card {
@@ -232,5 +255,9 @@ code {
   .hero,
   .panel {
     padding: 22px;
+  }
+
+  .site-footer {
+    padding: 18px 16px 24px;
   }
 }
