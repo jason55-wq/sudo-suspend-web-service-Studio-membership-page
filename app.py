@@ -262,7 +262,11 @@ def register_routes(app):
             password = request.form.get("password", "")
 
             user = User.query.filter_by(username=username).first()
-            if not user or not check_password_hash(user.password_hash, password):
+            if not user:
+                flash("無會員。", "error")
+                return render_template("login.html")
+
+            if not check_password_hash(user.password_hash, password):
                 flash("帳號或密碼錯誤。", "error")
                 return render_template("login.html")
 
