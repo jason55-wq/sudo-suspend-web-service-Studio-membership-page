@@ -12,7 +12,7 @@ class Config:
     if db_url and db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     if not db_url and os.environ.get("RENDER"):
-        db_url = "sqlite:////opt/render/project/src/data/member.db"
+        raise RuntimeError("DATABASE_URL is required on Render.")
 
     SQLALCHEMY_DATABASE_URI = db_url or f"sqlite:///{BASE_DIR / 'local.db'}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False

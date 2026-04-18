@@ -1,3 +1,8 @@
+databases:
+  - name: member-downloads-db
+    databaseName: member_downloads
+    user: member_downloads
+
 services:
   - type: web
     name: member-downloads
@@ -9,7 +14,9 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        value: sqlite:////opt/render/project/src/data/member.db
+        fromDatabase:
+          name: member-downloads-db
+          property: connectionString
       - key: MEMBER_FILES_DIR
         value: /opt/render/project/src/data/member_files
     disk:

@@ -4,7 +4,6 @@ from pathlib import Path
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import inspect
-from sqlalchemy.engine import make_url
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import Config
@@ -18,8 +17,6 @@ def create_app():
 
     member_dir = Path(app.config["MEMBER_FILES_DIR"])
     member_dir.mkdir(parents=True, exist_ok=True)
-    ensure_sqlite_database_dir(app.config["SQLALCHEMY_DATABASE_URI"])
-
     db.init_app(app)
     login_manager.init_app(app)
 
@@ -29,20 +26,6 @@ def create_app():
 
     register_routes(app)
     return app
-
-
-def ensure_sqlite_database_dir(database_uri: str):
-    url = make_url(database_uri)
-    if url.drivername != "sqlite":
-        return
-
-    database_path = url.database
-    if not database_path or database_path == ":memory:":
-        return
-
-    Path(database_path).expanduser().resolve(strict=False).parent.mkdir(parents=True, exist_ok=True)
-
-
 def ensure_schema():
     with db.engine.begin() as connection:
         def ensure_column(table_name: str, column_name: str, column_definition: str):
