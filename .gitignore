@@ -5,4 +5,5 @@ __pycache__/
 .venv/
 venv/
 env/
+7z/
 .pytest_cache/
