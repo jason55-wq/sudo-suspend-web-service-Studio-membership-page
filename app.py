@@ -30,7 +30,7 @@ TRANSLATIONS = {
         "footer.line": "LINE",
         "header.tagline": "會員商品中心",
         "header.browse_hint": "探索商品",
-        "index.title": "歡迎來到工作室會員系統",
+        "index.title": "歡迎來到偉克多工作室系統",
         "index.subtitle": "這是一個提供會員登入、商品管理與檔案下載的系統。",
         "index.visit_count": "目前瀏覽人次：{count}",
         "index.kicker": "Studio Digital Store",
