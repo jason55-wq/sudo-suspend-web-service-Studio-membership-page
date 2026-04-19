@@ -2,15 +2,15 @@
 
 {% block content %}
 <section class="panel">
-  <h1>登入</h1>
+  <h1>{{ t("auth.login") }}</h1>
   <form method="post" class="form">
-    <label>帳號
+    <label>{{ t("auth.username") }}
       <input type="text" name="username" required>
     </label>
-    <label>密碼
+    <label>{{ t("auth.password") }}
       <input type="password" name="password" required>
     </label>
-    <button class="btn primary" type="submit">登入</button>
+    <button class="btn primary" type="submit">{{ t("auth.login") }}</button>
   </form>
 </section>
 {% endblock %}

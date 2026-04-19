@@ -4,42 +4,42 @@
 <section class="panel">
   <div class="section-head">
     <div>
-      <h1>會員資料檢查</h1>
-      <p class="muted">重新部署前後可以來這裡比對會員數量有沒有變少。</p>
+      <h1>{{ t("admin.member_check.title") }}</h1>
+      <p class="muted">{{ t("admin.member_check.hint") }}</p>
     </div>
   </div>
 
   <div class="grid">
     <article class="card">
-      <h2>會員總數</h2>
+      <h2>{{ t("admin.member_check.total_members") }}</h2>
       <p class="meta">{{ member_count }}</p>
     </article>
     <article class="card">
-      <h2>最新會員</h2>
+      <h2>{{ t("admin.member_check.latest_member") }}</h2>
       {% if latest_member %}
         <p>{{ latest_member.username }}</p>
         <p class="meta">{{ latest_member.created_at }}</p>
       {% else %}
-        <p class="muted">目前沒有會員。</p>
+        <p class="muted">{{ t("admin.member_check.no_members") }}</p>
       {% endif %}
     </article>
   </div>
 </section>
 
 <section class="panel" style="margin-top: 20px;">
-  <h2>最近 10 位會員</h2>
+  <h2>{{ t("admin.member_check.latest_ten") }}</h2>
   {% if users %}
     <div class="grid">
       {% for user in users %}
         <article class="card">
           <h3>{{ user.username }}</h3>
-          <p class="meta">建立時間：{{ user.created_at }}</p>
-          <p class="meta">{{ "管理員" if user.is_admin else "一般會員" }}</p>
+          <p class="meta">{{ t("admin.member_check.created_at", created_at=user.created_at) }}</p>
+          <p class="meta">{{ t("role.admin") if user.is_admin else t("role.member") }}</p>
         </article>
       {% endfor %}
     </div>
   {% else %}
-    <p class="muted">目前沒有會員資料。</p>
+    <p class="muted">{{ t("admin.member_check.no_member_data") }}</p>
   {% endif %}
 </section>
 {% endblock %}

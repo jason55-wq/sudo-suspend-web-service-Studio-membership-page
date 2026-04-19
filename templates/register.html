@@ -2,16 +2,16 @@
 
 {% block content %}
 <section class="panel">
-  <h1>註冊</h1>
+  <h1>{{ t("auth.register") }}</h1>
   <form method="post" class="form">
-    <label>帳號
+    <label>{{ t("auth.username") }}
       <input type="text" name="username" required>
     </label>
-    <label>密碼
+    <label>{{ t("auth.password") }}
       <input type="password" name="password" required>
     </label>
-    <button class="btn primary" type="submit">建立帳號</button>
+    <button class="btn primary" type="submit">{{ t("auth.create_account") }}</button>
   </form>
-  <p class="muted">第一個註冊的會員會自動成為管理員，方便建立產品與訂單。</p>
+  <p class="muted">{{ t("register.first_user_hint") }}</p>
 </section>
 {% endblock %}

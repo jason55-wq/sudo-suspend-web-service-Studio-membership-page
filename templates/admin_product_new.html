@@ -2,49 +2,46 @@
 
 {% block content %}
 <section class="panel">
-  <h1>新增產品</h1>
+  <h1>{{ t("admin.product_new.title") }}</h1>
   <form method="post" class="form">
-    <label>名稱
+    <label>{{ t("admin.product_new.name") }}
       <input type="text" name="name" required>
     </label>
-    <label>價格
+    <label>{{ t("admin.product_new.price") }}
       <input type="number" name="price" min="0" step="1" value="0" required>
     </label>
-    <label>描述
+    <label>{{ t("admin.product_new.description") }}
       <textarea name="description" rows="5"></textarea>
     </label>
-    <label>檔案路徑
+    <label>{{ t("admin.product_new.file_path") }}
       <input type="text" name="file_path" placeholder="member_files/Git_Tutorial_1.pdf" required>
     </label>
-    <button class="btn primary" type="submit">建立產品</button>
+    <button class="btn primary" type="submit">{{ t("admin.product_new.submit") }}</button>
   </form>
-  <p class="muted">
-    檔案路徑必須位於 <code>member_files/</code> 內，例如
-    <code>member_files/Git_Tutorial_1.pdf</code> 或 <code>member_files/subfolder/manual.pdf</code>。
-  </p>
+  <p class="muted">{{ t("admin.product_new.path_hint") }}</p>
 </section>
 
 <section class="panel" style="margin-top: 20px;">
-  <h2>目前產品</h2>
+  <h2>{{ t("admin.product_new.existing") }}</h2>
   {% if admin_products %}
     <div class="grid">
       {% for product in admin_products %}
         <article class="card">
           <h3>{{ product.name }}</h3>
           <p class="meta">{{ product.price|currency }}</p>
-          <p>{{ product.description or "沒有描述" }}</p>
-          <p class="meta">檔案路徑：{{ product.file_path }}</p>
+          <p>{{ product.description or t("common.no_description") }}</p>
+          <p class="meta">{{ t("admin.product_new.path_label", path=product.file_path) }}</p>
           <div class="card-actions">
-            <a class="btn" href="{{ url_for('admin_edit_product', product_id=product.id) }}">編輯價格</a>
-            <form method="post" action="{{ url_for('admin_delete_product', product_id=product.id) }}" onsubmit="return confirm('確定要刪除這個產品嗎？');">
-              <button class="btn" type="submit">刪除產品</button>
+            <a class="btn" href="{{ url_for('admin_edit_product', product_id=product.id) }}">{{ t("admin.product_new.edit_price") }}</a>
+            <form method="post" action="{{ url_for('admin_delete_product', product_id=product.id) }}" onsubmit="return confirm({{ t('admin.product_new.delete_confirm')|tojson }});">
+              <button class="btn" type="submit">{{ t("admin.product_new.delete") }}</button>
             </form>
           </div>
         </article>
       {% endfor %}
     </div>
   {% else %}
-    <p>目前沒有產品。</p>
+    <p>{{ t("admin.product_new.no_products") }}</p>
   {% endif %}
 </section>
 {% endblock %}

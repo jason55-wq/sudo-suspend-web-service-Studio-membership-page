@@ -4,8 +4,8 @@
 <section class="panel">
   <div class="section-head">
     <div>
-      <h1>商品列表</h1>
-      <p class="muted">先填寫購買人基本資料，再送出購買申請；核准後就能下載。</p>
+      <h1>{{ t("dashboard.products_title") }}</h1>
+      <p class="muted">{{ t("dashboard.products_hint") }}</p>
     </div>
   </div>
 
@@ -16,29 +16,29 @@
           <div class="card-top">
             <h2>{{ item.product.name }}</h2>
             {% if item.status == "approved" %}
-              <span class="status-tag approved">已核准</span>
+              <span class="status-tag approved">{{ t("status.approved") }}</span>
             {% elif item.status == "pending" %}
-              <span class="status-tag pending">審核中</span>
+              <span class="status-tag pending">{{ t("status.pending") }}</span>
             {% elif item.status == "rejected" %}
-              <span class="status-tag rejected">已拒絕</span>
+              <span class="status-tag rejected">{{ t("status.rejected") }}</span>
             {% else %}
-              <span class="status-tag available">可購買</span>
+              <span class="status-tag available">{{ t("status.available") }}</span>
             {% endif %}
           </div>
 
           <p class="meta">{{ item.product.price|currency }}</p>
-          <p>{{ item.product.description or "尚無商品說明" }}</p>
+          <p>{{ item.product.description or t("common.no_description") }}</p>
 
           {% if item.status == "approved" %}
-            <p class="meta">你已完成購買，可以直接下載。</p>
-            <a class="btn primary" href="{{ url_for('download', product_id=item.product.id) }}">下載檔案</a>
+            <p class="meta">{{ t("dashboard.approved_hint") }}</p>
+            <a class="btn primary" href="{{ url_for('download', product_id=item.product.id) }}">{{ t("common.download_file") }}</a>
           {% elif item.status == "pending" %}
-            <p class="meta">購買申請已送出，等待管理員審核。</p>
-            <button class="btn" type="button" disabled>審核中</button>
+            <p class="meta">{{ t("dashboard.pending_hint") }}</p>
+            <button class="btn" type="button" disabled>{{ t("status.pending") }}</button>
           {% elif item.status == "rejected" %}
-            <p class="meta">申請被拒絕，你可以重新填寫資料後再送出。</p>
+            <p class="meta">{{ t("dashboard.rejected_hint") }}</p>
             <form method="post" action="{{ url_for('request_purchase', product_id=item.product.id) }}" class="form">
-              <label>購買人姓名
+              <label>{{ t("purchase.buyer_name") }}
                 <input
                   type="text"
                   name="buyer_name"
@@ -47,7 +47,7 @@
                   autocomplete="name"
                 >
               </label>
-              <label>手機號碼
+              <label>{{ t("purchase.buyer_phone") }}
                 <input
                   type="tel"
                   name="buyer_phone"
@@ -56,7 +56,7 @@
                   autocomplete="tel"
                 >
               </label>
-              <label>電子郵件
+              <label>{{ t("purchase.buyer_email") }}
                 <input
                   type="email"
                   name="buyer_email"
@@ -65,12 +65,12 @@
                   autocomplete="email"
                 >
               </label>
-              <button class="btn primary" type="submit">重新購買</button>
+              <button class="btn primary" type="submit">{{ t("purchase.buy_again") }}</button>
             </form>
           {% else %}
-            <p class="meta">尚未購買，填好資料後即可送出購買申請。</p>
+            <p class="meta">{{ t("dashboard.available_hint") }}</p>
             <form method="post" action="{{ url_for('request_purchase', product_id=item.product.id) }}" class="form">
-              <label>購買人姓名
+              <label>{{ t("purchase.buyer_name") }}
                 <input
                   type="text"
                   name="buyer_name"
@@ -79,7 +79,7 @@
                   autocomplete="name"
                 >
               </label>
-              <label>手機號碼
+              <label>{{ t("purchase.buyer_phone") }}
                 <input
                   type="tel"
                   name="buyer_phone"
@@ -88,7 +88,7 @@
                   autocomplete="tel"
                 >
               </label>
-              <label>電子郵件
+              <label>{{ t("purchase.buyer_email") }}
                 <input
                   type="email"
                   name="buyer_email"
@@ -97,19 +97,19 @@
                   autocomplete="email"
                 >
               </label>
-              <button class="btn primary" type="submit">購買</button>
+              <button class="btn primary" type="submit">{{ t("purchase.buy") }}</button>
             </form>
           {% endif %}
         </article>
       {% endfor %}
     </div>
   {% else %}
-    <p>目前沒有可購買的商品。</p>
+    <p>{{ t("dashboard.no_products") }}</p>
   {% endif %}
 </section>
 
 <section class="panel" style="margin-top: 20px;">
-  <h2>已購買商品</h2>
+  <h2>{{ t("dashboard.owned_title") }}</h2>
 
   {% if products %}
     <div class="grid">
@@ -117,13 +117,13 @@
         <article class="card">
           <h3>{{ product.name }}</h3>
           <p class="meta">{{ product.price|currency }}</p>
-          <p>{{ product.description or "尚無商品說明" }}</p>
-          <a class="btn primary" href="{{ url_for('download', product_id=product.id) }}">下載檔案</a>
+          <p>{{ product.description or t("common.no_description") }}</p>
+          <a class="btn primary" href="{{ url_for('download', product_id=product.id) }}">{{ t("common.download_file") }}</a>
         </article>
       {% endfor %}
     </div>
   {% else %}
-    <p class="muted">目前沒有已購買的商品。</p>
+    <p class="muted">{{ t("dashboard.no_owned_products") }}</p>
   {% endif %}
 </section>
 {% endblock %}

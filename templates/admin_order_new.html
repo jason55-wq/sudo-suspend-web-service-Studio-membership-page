@@ -2,82 +2,82 @@
 
 {% block content %}
 <section class="panel">
-  <h1>建立購買紀錄</h1>
-  <p class="muted">管理員可以手動建立已核准的購買紀錄。</p>
+  <h1>{{ t("admin.order_new.title") }}</h1>
+  <p class="muted">{{ t("admin.order_new.hint") }}</p>
 
   <form method="post" class="form">
-    <label>會員
+    <label>{{ t("admin.order_new.member") }}
       <select name="user_id" required>
-        <option value="">請選擇會員</option>
+        <option value="">{{ t("admin.order_new.select_member") }}</option>
         {% for user in users %}
           <option value="{{ user.id }}">{{ user.username }}</option>
         {% endfor %}
       </select>
     </label>
-    <label>產品
+    <label>{{ t("admin.order_new.product") }}
       <select name="product_id" required>
-        <option value="">請選擇產品</option>
+        <option value="">{{ t("admin.order_new.select_product") }}</option>
         {% for product in products %}
           <option value="{{ product.id }}">{{ product.name }} - {{ product.price|currency }}</option>
         {% endfor %}
       </select>
     </label>
-    <button class="btn primary" type="submit">建立購買紀錄</button>
+    <button class="btn primary" type="submit">{{ t("admin.order_new.submit") }}</button>
   </form>
 </section>
 
 <section class="panel" style="margin-top: 20px;">
-  <h2>待審核申請</h2>
+  <h2>{{ t("admin.order_new.pending_title") }}</h2>
   {% if pending_orders %}
     <div class="grid">
       {% for order in pending_orders %}
         <article class="card">
           <h3>{{ order.user.username }}</h3>
-          <p class="meta">姓名：{{ order.buyer_name or "未填寫" }}</p>
-          <p class="meta">手機：{{ order.buyer_phone or "未填寫" }}</p>
-          <p class="meta">Email：{{ order.buyer_email or "未填寫" }}</p>
+          <p class="meta">{{ t("common.name") }}: {{ order.buyer_name or t("common.not_filled") }}</p>
+          <p class="meta">{{ t("common.phone") }}: {{ order.buyer_phone or t("common.not_filled") }}</p>
+          <p class="meta">{{ t("common.email") }}: {{ order.buyer_email or t("common.not_filled") }}</p>
           {% if order.items %}
             <p>{{ order.items[0].product.name }}</p>
             <p class="meta">{{ order.items[0].unit_price|currency }}</p>
           {% endif %}
-          <p class="meta">申請時間：{{ order.created_at }}</p>
+          <p class="meta">{{ t("admin.order_new.created_at", created_at=order.created_at) }}</p>
           <div class="card-actions">
             <form method="post" action="{{ url_for('admin_approve_order', order_id=order.id) }}">
-              <button class="btn primary" type="submit">核准</button>
+              <button class="btn primary" type="submit">{{ t("admin.order_new.approve") }}</button>
             </form>
             <form method="post" action="{{ url_for('admin_reject_order', order_id=order.id) }}">
-              <button class="btn" type="submit">拒絕</button>
+              <button class="btn" type="submit">{{ t("admin.order_new.reject") }}</button>
             </form>
           </div>
         </article>
       {% endfor %}
     </div>
   {% else %}
-    <p class="muted">目前沒有待審核的購買申請。</p>
+    <p class="muted">{{ t("admin.order_new.no_pending") }}</p>
   {% endif %}
 </section>
 
 <section class="panel" style="margin-top: 20px;">
-  <h2>產品清單</h2>
+  <h2>{{ t("admin.order_new.product_list") }}</h2>
   {% if admin_products %}
     <div class="grid">
       {% for product in admin_products %}
         <article class="card">
           <h3>{{ product.name }}</h3>
           <p class="meta">{{ product.price|currency }}</p>
-          <p>{{ product.description or "尚無商品說明" }}</p>
-          <p class="meta">檔案路徑：{{ product.file_path }}</p>
+          <p>{{ product.description or t("common.no_description") }}</p>
+          <p class="meta">{{ t("admin.product_new.path_label", path=product.file_path) }}</p>
           <div class="card-actions">
-            <a class="btn" href="{{ url_for('admin_edit_product', product_id=product.id) }}">編輯價格</a>
-            <form method="post" action="{{ url_for('admin_delete_product', product_id=product.id) }}" onsubmit="return confirm('確定要刪除這個產品嗎？');">
-              <button class="btn" type="submit">刪除產品</button>
+            <a class="btn" href="{{ url_for('admin_edit_product', product_id=product.id) }}">{{ t("admin.product_new.edit_price") }}</a>
+            <form method="post" action="{{ url_for('admin_delete_product', product_id=product.id) }}" onsubmit="return confirm({{ t('admin.product_new.delete_confirm')|tojson }});">
+              <button class="btn" type="submit">{{ t("admin.product_new.delete") }}</button>
             </form>
           </div>
         </article>
       {% endfor %}
     </div>
   {% else %}
-    <p>目前沒有產品。</p>
+    <p>{{ t("admin.product_new.no_products") }}</p>
   {% endif %}
 </section>
 {% endblock %}

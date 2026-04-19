@@ -1,7 +1,7 @@
 ﻿from functools import wraps
 from pathlib import Path
 
-from flask import Flask, abort, flash, redirect, render_template, request, send_file, url_for
+from flask import Flask, abort, flash, redirect, render_template, request, send_file, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import inspect
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -9,6 +9,244 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from config import Config
 from extensions import db, login_manager
 from models import Order, OrderItem, Product, SiteStat, User
+
+SUPPORTED_LANGUAGES = {"zh-Hant", "en"}
+DEFAULT_LANGUAGE = "zh-Hant"
+
+TRANSLATIONS = {
+    "zh-Hant": {
+        "app_name": "工作室會員管理",
+        "nav.dashboard": "會員首頁",
+        "nav.admin_products": "新增商品",
+        "nav.admin_orders": "新增訂單",
+        "nav.member_check": "會員審核",
+        "nav.admin_users": "會員管理",
+        "nav.logout": "登出",
+        "nav.login": "登入",
+        "nav.register": "註冊",
+        "lang.switch": "English",
+        "footer.contact_title": "網站負責人聯絡方式",
+        "footer.phone": "電話",
+        "footer.line": "LINE",
+        "index.title": "歡迎來到工作室會員系統",
+        "index.subtitle": "這是一個提供會員登入、商品管理與檔案下載的系統。",
+        "index.visit_count": "目前瀏覽人次：{count}",
+        "auth.login": "登入",
+        "auth.register": "註冊",
+        "auth.username": "帳號",
+        "auth.password": "密碼",
+        "auth.create_account": "建立帳號",
+        "register.first_user_hint": "第一個註冊的會員會自動成為管理員，方便建立產品與訂單。",
+        "dashboard.products_title": "商品列表",
+        "dashboard.products_hint": "先填寫購買人基本資料，再送出購買申請；核准後就能下載。",
+        "status.approved": "已核准",
+        "status.pending": "審核中",
+        "status.rejected": "已拒絕",
+        "status.available": "可購買",
+        "common.no_description": "尚無商品說明",
+        "dashboard.approved_hint": "你已完成購買，可以直接下載。",
+        "common.download_file": "下載檔案",
+        "dashboard.pending_hint": "購買申請已送出，等待管理員審核。",
+        "dashboard.rejected_hint": "申請被拒絕，你可以重新填寫資料後再送出。",
+        "purchase.buyer_name": "購買人姓名",
+        "purchase.buyer_phone": "手機號碼",
+        "purchase.buyer_email": "電子郵件",
+        "purchase.buy_again": "重新購買",
+        "dashboard.available_hint": "尚未購買，填好資料後即可送出購買申請。",
+        "purchase.buy": "購買",
+        "dashboard.no_products": "目前沒有可購買的商品。",
+        "dashboard.owned_title": "已購買商品",
+        "dashboard.no_owned_products": "目前沒有已購買的商品。",
+        "admin.product_new.title": "新增商品",
+        "admin.product_new.name": "名稱",
+        "admin.product_new.price": "價格",
+        "admin.product_new.description": "說明",
+        "admin.product_new.file_path": "檔案路徑",
+        "admin.product_new.submit": "建立商品",
+        "admin.product_new.path_hint": "檔案路徑需放在 member_files/ 底下，例如 member_files/Git_Tutorial_1.pdf 或 member_files/subfolder/manual.pdf。",
+        "admin.product_new.existing": "現有商品",
+        "admin.product_new.path_label": "檔案路徑：{path}",
+        "admin.product_new.edit_price": "編輯價格",
+        "admin.product_new.delete": "刪除產品",
+        "admin.product_new.delete_confirm": "確定要刪除這個產品嗎？",
+        "admin.product_new.no_products": "目前沒有商品。",
+        "admin.product_edit.title": "編輯產品價格",
+        "admin.product_edit.hint": "只更新價格，不會改動產品名稱、描述或檔案路徑。",
+        "admin.product_edit.name": "產品名稱",
+        "admin.product_edit.current_price": "目前價格",
+        "admin.product_edit.new_price": "新價格",
+        "admin.product_edit.save": "儲存變更",
+        "common.back": "返回",
+        "admin.order_new.title": "建立購買紀錄",
+        "admin.order_new.hint": "管理員可以手動建立已核准的購買紀錄。",
+        "admin.order_new.member": "會員",
+        "admin.order_new.select_member": "請選擇會員",
+        "admin.order_new.product": "產品",
+        "admin.order_new.select_product": "請選擇產品",
+        "admin.order_new.submit": "建立購買紀錄",
+        "admin.order_new.pending_title": "待審核申請",
+        "common.name": "姓名",
+        "common.phone": "手機",
+        "common.email": "Email",
+        "common.not_filled": "未填寫",
+        "admin.order_new.created_at": "申請時間：{created_at}",
+        "admin.order_new.approve": "核准",
+        "admin.order_new.reject": "拒絕",
+        "admin.order_new.no_pending": "目前沒有待審核的購買申請。",
+        "admin.order_new.product_list": "產品清單",
+        "admin.users.title": "會員列表",
+        "admin.users.total": "會員總數：{count}",
+        "role.admin": "管理員",
+        "role.member": "一般會員",
+        "admin.users.purchased_count": "已購買商品數：{count}",
+        "admin.member_check.title": "會員資料檢查",
+        "admin.member_check.hint": "重新部署前後可以來這裡比對會員數量有沒有變少。",
+        "admin.member_check.total_members": "會員總數",
+        "admin.member_check.latest_member": "最新會員",
+        "admin.member_check.no_members": "目前沒有會員。",
+        "admin.member_check.latest_ten": "最近 10 位會員",
+        "admin.member_check.created_at": "建立時間：{created_at}",
+        "admin.member_check.no_member_data": "目前沒有會員資料。",
+        "flash.enter_username_password": "請輸入帳號與密碼。",
+        "flash.username_exists": "這個帳號已存在。",
+        "flash.register_success": "註冊成功。",
+        "flash.no_member": "無會員。",
+        "flash.invalid_credentials": "帳號或密碼錯誤。",
+        "flash.login_success": "登入成功。",
+        "flash.logged_out": "已登出。",
+        "flash.product_already_approved": "這個產品已經核准，可以直接下載。",
+        "flash.purchase_pending": "你的購買申請已送出，請等管理員審核。",
+        "flash.fill_buyer_info": "請填寫購買人姓名、手機與電子郵件。",
+        "flash.purchase_submitted": "購買申請已送出，金額為 {price}，等待管理員審核。",
+        "flash.path_must_be_within_member_dir": "檔案路徑必須位於會員檔案資料夾內。",
+        "flash.member_file_not_found": "找不到會員檔案",
+        "flash.enter_product_price_path": "請輸入產品名稱、價格與檔案路徑。",
+        "flash.enter_valid_price": "請輸入有效的產品價格。",
+        "flash.product_created": "產品已建立。",
+        "flash.product_deleted": "產品已刪除。",
+        "flash.product_price_updated": "產品價格已更新。",
+        "flash.select_valid_member_product": "請選擇有效的會員與產品。",
+        "flash.order_created": "已建立購買紀錄。",
+        "flash.order_approved": "申請已核准，會員現在可以下載。",
+        "flash.order_rejected": "申請已拒絕。",
+    },
+    "en": {
+        "app_name": "Studio Membership",
+        "nav.dashboard": "Dashboard",
+        "nav.admin_products": "Products",
+        "nav.admin_orders": "Orders",
+        "nav.member_check": "Member Check",
+        "nav.admin_users": "Members",
+        "nav.logout": "Log out",
+        "nav.login": "Log in",
+        "nav.register": "Sign up",
+        "lang.switch": "中文",
+        "footer.contact_title": "Site Contact",
+        "footer.phone": "Phone",
+        "footer.line": "LINE",
+        "index.title": "Welcome to the Studio Membership System",
+        "index.subtitle": "A member portal for login, product management, and file downloads.",
+        "index.visit_count": "Page visits: {count}",
+        "auth.login": "Log in",
+        "auth.register": "Sign up",
+        "auth.username": "Username",
+        "auth.password": "Password",
+        "auth.create_account": "Create account",
+        "register.first_user_hint": "The first registered account becomes an admin automatically so products and orders can be managed right away.",
+        "dashboard.products_title": "Products",
+        "dashboard.products_hint": "Fill in the buyer details first, then submit a purchase request. You can download after approval.",
+        "status.approved": "Approved",
+        "status.pending": "Pending",
+        "status.rejected": "Rejected",
+        "status.available": "Available",
+        "common.no_description": "No product description yet.",
+        "dashboard.approved_hint": "Your purchase is approved and ready to download.",
+        "common.download_file": "Download file",
+        "dashboard.pending_hint": "Your purchase request has been submitted and is awaiting admin approval.",
+        "dashboard.rejected_hint": "This request was rejected. You can update the details and submit again.",
+        "purchase.buyer_name": "Buyer name",
+        "purchase.buyer_phone": "Phone number",
+        "purchase.buyer_email": "Email",
+        "purchase.buy_again": "Buy again",
+        "dashboard.available_hint": "You have not purchased this item yet. Fill in your details to submit a request.",
+        "purchase.buy": "Buy",
+        "dashboard.no_products": "There are no products available right now.",
+        "dashboard.owned_title": "Purchased Products",
+        "dashboard.no_owned_products": "You have not purchased any products yet.",
+        "admin.product_new.title": "Add Product",
+        "admin.product_new.name": "Name",
+        "admin.product_new.price": "Price",
+        "admin.product_new.description": "Description",
+        "admin.product_new.file_path": "File path",
+        "admin.product_new.submit": "Create product",
+        "admin.product_new.path_hint": "File paths must stay under member_files/, for example member_files/Git_Tutorial_1.pdf or member_files/subfolder/manual.pdf.",
+        "admin.product_new.existing": "Existing Products",
+        "admin.product_new.path_label": "File path: {path}",
+        "admin.product_new.edit_price": "Edit price",
+        "admin.product_new.delete": "Delete product",
+        "admin.product_new.delete_confirm": "Are you sure you want to delete this product?",
+        "admin.product_new.no_products": "There are no products yet.",
+        "admin.product_edit.title": "Edit Product Price",
+        "admin.product_edit.hint": "Only the price will be updated. The name, description, and file path stay unchanged.",
+        "admin.product_edit.name": "Product name",
+        "admin.product_edit.current_price": "Current price",
+        "admin.product_edit.new_price": "New price",
+        "admin.product_edit.save": "Save changes",
+        "common.back": "Back",
+        "admin.order_new.title": "Create Purchase Record",
+        "admin.order_new.hint": "Admins can manually create an approved purchase record.",
+        "admin.order_new.member": "Member",
+        "admin.order_new.select_member": "Select a member",
+        "admin.order_new.product": "Product",
+        "admin.order_new.select_product": "Select a product",
+        "admin.order_new.submit": "Create purchase record",
+        "admin.order_new.pending_title": "Pending Requests",
+        "common.name": "Name",
+        "common.phone": "Phone",
+        "common.email": "Email",
+        "common.not_filled": "Not provided",
+        "admin.order_new.created_at": "Requested at: {created_at}",
+        "admin.order_new.approve": "Approve",
+        "admin.order_new.reject": "Reject",
+        "admin.order_new.no_pending": "There are no pending purchase requests right now.",
+        "admin.order_new.product_list": "Product List",
+        "admin.users.title": "Member List",
+        "admin.users.total": "Total members: {count}",
+        "role.admin": "Admin",
+        "role.member": "Member",
+        "admin.users.purchased_count": "Purchased items: {count}",
+        "admin.member_check.title": "Member Data Check",
+        "admin.member_check.hint": "Use this page to compare member counts before and after redeployment.",
+        "admin.member_check.total_members": "Total Members",
+        "admin.member_check.latest_member": "Latest Member",
+        "admin.member_check.no_members": "There are no members yet.",
+        "admin.member_check.latest_ten": "Latest 10 Members",
+        "admin.member_check.created_at": "Created at: {created_at}",
+        "admin.member_check.no_member_data": "No member data is available.",
+        "flash.enter_username_password": "Please enter a username and password.",
+        "flash.username_exists": "This username already exists.",
+        "flash.register_success": "Registration successful.",
+        "flash.no_member": "Member not found.",
+        "flash.invalid_credentials": "Incorrect username or password.",
+        "flash.login_success": "Login successful.",
+        "flash.logged_out": "You have been logged out.",
+        "flash.product_already_approved": "This product is already approved and ready to download.",
+        "flash.purchase_pending": "Your purchase request has already been submitted. Please wait for admin approval.",
+        "flash.fill_buyer_info": "Please provide the buyer's name, phone number, and email.",
+        "flash.purchase_submitted": "Your purchase request has been submitted for {price}. Please wait for admin approval.",
+        "flash.path_must_be_within_member_dir": "The file path must be inside the member files directory.",
+        "flash.member_file_not_found": "Member file not found.",
+        "flash.enter_product_price_path": "Please enter the product name, price, and file path.",
+        "flash.enter_valid_price": "Please enter a valid product price.",
+        "flash.product_created": "Product created.",
+        "flash.product_deleted": "Product deleted.",
+        "flash.product_price_updated": "Product price updated.",
+        "flash.select_valid_member_product": "Please select a valid member and product.",
+        "flash.order_created": "Purchase record created.",
+        "flash.order_approved": "Request approved. The member can now download the file.",
+        "flash.order_rejected": "Request rejected.",
+    },
+}
 
 
 def create_app():
@@ -63,6 +301,17 @@ def increment_site_visit_count():
 
 
 def register_routes(app):
+    def get_locale() -> str:
+        lang = session.get("lang", DEFAULT_LANGUAGE)
+        if lang not in SUPPORTED_LANGUAGES:
+            lang = DEFAULT_LANGUAGE
+        return lang
+
+    def t(key: str, **kwargs) -> str:
+        lang = get_locale()
+        text = TRANSLATIONS.get(lang, {}).get(key) or TRANSLATIONS[DEFAULT_LANGUAGE].get(key, key)
+        return text.format(**kwargs) if kwargs else text
+
     @login_manager.user_loader
     def load_user(user_id):
         return db.session.get(User, int(user_id))
@@ -158,7 +407,7 @@ def register_routes(app):
         try:
             candidate.relative_to(base_dir)
         except ValueError as exc:
-            raise ValueError("檔案路徑必須位於會員檔案資料夾內。") from exc
+            raise ValueError(t("flash.path_must_be_within_member_dir")) from exc
 
         return candidate.relative_to(base_dir).as_posix()
 
@@ -170,16 +419,21 @@ def register_routes(app):
         try:
             candidate.relative_to(base_dir)
         except ValueError as exc:
-            raise ValueError("找不到會員檔案") from exc
+            raise ValueError(t("flash.member_file_not_found")) from exc
 
         if not candidate.exists() or not candidate.is_file():
-            raise ValueError("找不到會員檔案")
+            raise ValueError(t("flash.member_file_not_found"))
 
         return candidate
 
     @app.context_processor
     def inject_globals():
-        return {"app_name": "工作室會員管理"}
+        current_lang = get_locale()
+        return {
+            "app_name": t("app_name"),
+            "lang": current_lang,
+            "t": t,
+        }
 
     @app.context_processor
     def inject_admin_products():
@@ -192,6 +446,16 @@ def register_routes(app):
         except (TypeError, ValueError):
             amount = 0
         return f"NT$ {amount:,}"
+
+    @app.route("/set-language/<lang_code>")
+    def set_language(lang_code):
+        if lang_code not in SUPPORTED_LANGUAGES:
+            abort(404)
+        session["lang"] = lang_code
+        next_url = request.args.get("next")
+        if next_url:
+            return redirect(next_url)
+        return redirect(request.referrer or url_for("index"))
 
     @app.route("/")
     def index():
@@ -210,11 +474,11 @@ def register_routes(app):
             password = request.form.get("password", "")
 
             if not username or not password:
-                flash("請輸入帳號與密碼。", "error")
+                flash(t("flash.enter_username_password"), "error")
                 return render_template("register.html")
 
             if User.query.filter_by(username=username).first():
-                flash("這個帳號已存在。", "error")
+                flash(t("flash.username_exists"), "error")
                 return render_template("register.html")
 
             is_first_user = User.query.count() == 0
@@ -227,7 +491,7 @@ def register_routes(app):
             db.session.commit()
 
             login_user(user)
-            flash("註冊成功。", "success")
+            flash(t("flash.register_success"), "success")
             return redirect(url_for("dashboard"))
 
         return render_template("register.html")
@@ -243,15 +507,15 @@ def register_routes(app):
 
             user = User.query.filter_by(username=username).first()
             if not user:
-                flash("無會員。", "error")
+                flash(t("flash.no_member"), "error")
                 return render_template("login.html")
 
             if not check_password_hash(user.password_hash, password):
-                flash("帳號或密碼錯誤。", "error")
+                flash(t("flash.invalid_credentials"), "error")
                 return render_template("login.html")
 
             login_user(user)
-            flash("登入成功。", "success")
+            flash(t("flash.login_success"), "success")
             return redirect(url_for("dashboard"))
 
         return render_template("login.html")
@@ -260,7 +524,7 @@ def register_routes(app):
     @login_required
     def logout():
         logout_user()
-        flash("已登出。", "success")
+        flash(t("flash.logged_out"), "success")
         return redirect(url_for("index"))
 
     @app.route("/dashboard")
@@ -283,10 +547,10 @@ def register_routes(app):
 
         status = get_product_purchase_state(current_user.id, product_id)
         if status == "approved":
-            flash("這個產品已經核准，可以直接下載。", "success")
+            flash(t("flash.product_already_approved"), "success")
             return redirect(url_for("dashboard"))
         if status == "pending":
-            flash("你的購買申請已送出，請等管理員審核。", "success")
+            flash(t("flash.purchase_pending"), "success")
             return redirect(url_for("dashboard"))
 
         buyer_name = request.form.get("buyer_name", "").strip()
@@ -294,7 +558,7 @@ def register_routes(app):
         buyer_email = request.form.get("buyer_email", "").strip()
 
         if not buyer_name or not buyer_phone or not buyer_email:
-            flash("請填寫購買人姓名、手機與電子郵件。", "error")
+            flash(t("flash.fill_buyer_info"), "error")
             return redirect(url_for("dashboard"))
 
         order = Order(
@@ -317,7 +581,7 @@ def register_routes(app):
         )
         db.session.commit()
 
-        flash(f"購買申請已送出，金額為 {format_currency(product.price)}，等待管理員審核。", "success")
+        flash(t("flash.purchase_submitted", price=format_currency(product.price)), "success")
         return redirect(url_for("dashboard"))
 
     @app.route("/download/<int:product_id>")
@@ -358,11 +622,11 @@ def register_routes(app):
             file_path_raw = request.form.get("file_path", "").strip()
 
             if not name or not file_path_raw:
-                flash("請輸入產品名稱、價格與檔案路徑。", "error")
+                flash(t("flash.enter_product_price_path"), "error")
                 return render_template("admin_product_new.html")
 
             if price is None or price < 0:
-                flash("請輸入有效的產品價格。", "error")
+                flash(t("flash.enter_valid_price"), "error")
                 return render_template("admin_product_new.html")
 
             try:
@@ -380,7 +644,7 @@ def register_routes(app):
             )
             db.session.add(product)
             db.session.commit()
-            flash("產品已建立。", "success")
+            flash(t("flash.product_created"), "success")
             return redirect(url_for("admin_new_product"))
 
         return render_template("admin_product_new.html")
@@ -396,7 +660,7 @@ def register_routes(app):
         OrderItem.query.filter_by(product_id=product.id).delete(synchronize_session=False)
         db.session.delete(product)
         db.session.commit()
-        flash("產品已刪除。", "success")
+        flash(t("flash.product_deleted"), "success")
         return redirect(url_for("admin_new_product"))
 
     @app.route("/admin/products/<int:product_id>/edit", methods=["GET", "POST"])
@@ -410,12 +674,12 @@ def register_routes(app):
         if request.method == "POST":
             price = request.form.get("price", type=int)
             if price is None or price < 0:
-                flash("請輸入有效的產品價格。", "error")
+                flash(t("flash.enter_valid_price"), "error")
                 return render_template("admin_product_edit.html", product=product)
 
             product.price = price
             db.session.commit()
-            flash("產品價格已更新。", "success")
+            flash(t("flash.product_price_updated"), "success")
             return redirect(url_for("admin_new_product"))
 
         return render_template("admin_product_edit.html", product=product)
@@ -435,7 +699,7 @@ def register_routes(app):
             product = db.session.get(Product, product_id)
 
             if not user or not product:
-                flash("請選擇有效的會員與產品。", "error")
+                flash(t("flash.select_valid_member_product"), "error")
                 return render_template("admin_order_new.html", users=users, products=products)
 
             order = Order(user_id=user.id, status="approved")
@@ -452,7 +716,7 @@ def register_routes(app):
             )
             db.session.commit()
 
-            flash("已建立購買紀錄。", "success")
+            flash(t("flash.order_created"), "success")
             return redirect(url_for("admin_users"))
 
         pending_orders = (
@@ -477,7 +741,7 @@ def register_routes(app):
 
         order.status = "approved"
         db.session.commit()
-        flash("申請已核准，會員現在可以下載。", "success")
+        flash(t("flash.order_approved"), "success")
         return redirect(url_for("admin_new_order"))
 
     @app.route("/admin/orders/<int:order_id>/reject", methods=["POST"])
@@ -490,7 +754,7 @@ def register_routes(app):
 
         order.status = "rejected"
         db.session.commit()
-        flash("申請已拒絕。", "success")
+        flash(t("flash.order_rejected"), "success")
         return redirect(url_for("admin_new_order"))
 
     @app.route("/admin/users")
