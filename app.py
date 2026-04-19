@@ -4,6 +4,7 @@ from pathlib import Path
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import inspect
+from sqlalchemy.exc import OperationalError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import Config
@@ -344,13 +345,26 @@ def create_app():
     return app
 def ensure_schema():
     with db.engine.begin() as connection:
+        dialect_name = connection.dialect.name
+
         def ensure_column(table_name: str, column_name: str, column_definition: str):
             inspector = inspect(connection)
             columns = {column["name"] for column in inspector.get_columns(table_name)}
-            if column_name not in columns:
-                connection.exec_driver_sql(
-                    f"ALTER TABLE {table_name} ADD COLUMN {column_definition}"
-                )
+            if column_name in columns:
+                return
+
+            if dialect_name == "postgresql":
+                ddl = f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_definition}"
+            else:
+                ddl = f"ALTER TABLE {table_name} ADD COLUMN {column_definition}"
+
+            try:
+                connection.exec_driver_sql(ddl)
+            except OperationalError as exc:
+                message = str(getattr(exc, "orig", exc)).lower()
+                if "duplicate column" in message or "already exists" in message:
+                    return
+                raise
 
         ensure_column("orders", "status", "status VARCHAR(20) NOT NULL DEFAULT 'approved'")
         ensure_column("orders", "payment_status", "payment_status VARCHAR(30)")
