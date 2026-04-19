@@ -23,13 +23,19 @@
           </div>
           <div class="card-top">
             <h2>{{ item.product.name }}</h2>
-            {% if item.status == "approved" %}
-              <span class="status-tag approved">{{ t("status.approved") }}</span>
-            {% elif item.status == "pending" %}
-              <span class="status-tag pending">{{ t("status.pending") }}</span>
-            {% elif item.status == "rejected" %}
-              <span class="status-tag rejected">{{ t("status.rejected") }}</span>
-            {% else %}
+          {% if item.status == "approved" %}
+            <span class="status-tag approved">{{ t("status.approved") }}</span>
+          {% elif item.status == "paid" %}
+            <span class="status-tag pending">{{ t("status.paid") }}</span>
+          {% elif item.status == "pending_payment" %}
+            <span class="status-tag pending">{{ t("status.pending_payment") }}</span>
+          {% elif item.status == "failed" %}
+            <span class="status-tag rejected">{{ t("status.failed") }}</span>
+          {% elif item.status == "pending" %}
+            <span class="status-tag pending">{{ t("status.pending") }}</span>
+          {% elif item.status == "rejected" %}
+            <span class="status-tag rejected">{{ t("status.rejected") }}</span>
+          {% else %}
               <span class="status-tag available">{{ t("status.available") }}</span>
             {% endif %}
           </div>
@@ -43,6 +49,48 @@
           {% if item.status == "approved" %}
             <p class="meta">{{ t("dashboard.approved_hint") }}</p>
             <a class="btn primary" href="{{ url_for('download', product_id=item.product.id) }}">{{ t("common.download_file") }}</a>
+          {% elif item.status == "paid" %}
+            <p class="meta">{{ t("dashboard.paid_hint") }}</p>
+            <button class="btn" type="button" disabled>{{ t("status.paid") }}</button>
+          {% elif item.status == "pending_payment" %}
+            <p class="meta">{{ t("dashboard.pending_payment_hint") }}</p>
+            {% if item.order_id %}
+              <a class="btn primary" href="{{ url_for('payment_checkout', order_id=item.order_id) }}">{{ t("purchase.pay_now") }}</a>
+            {% else %}
+              <button class="btn" type="button" disabled>{{ t("purchase.pay_now") }}</button>
+            {% endif %}
+          {% elif item.status == "failed" %}
+            <p class="meta">{{ t("dashboard.failed_hint") }}</p>
+            <form method="post" action="{{ url_for('request_purchase', product_id=item.product.id) }}" class="form">
+              <label>{{ t("purchase.buyer_name") }}
+                <input
+                  type="text"
+                  name="buyer_name"
+                  required
+                  value="{{ request.form.get('buyer_name', '') }}"
+                  autocomplete="name"
+                >
+              </label>
+              <label>{{ t("purchase.buyer_phone") }}
+                <input
+                  type="tel"
+                  name="buyer_phone"
+                  required
+                  value="{{ request.form.get('buyer_phone', '') }}"
+                  autocomplete="tel"
+                >
+              </label>
+              <label>{{ t("purchase.buyer_email") }}
+                <input
+                  type="email"
+                  name="buyer_email"
+                  required
+                  value="{{ request.form.get('buyer_email', '') }}"
+                  autocomplete="email"
+                >
+              </label>
+              <button class="btn primary" type="submit">{{ t("purchase.buy_again") }}</button>
+            </form>
           {% elif item.status == "pending" %}
             <p class="meta">{{ t("dashboard.pending_hint") }}</p>
             <button class="btn" type="button" disabled>{{ t("status.pending") }}</button>

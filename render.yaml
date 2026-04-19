@@ -19,6 +19,12 @@ services:
           property: connectionString
       - key: MEMBER_FILES_DIR
         value: /opt/render/project/src/data/member_files
+      - key: BASE_URL
+        value: https://your-render-service.onrender.com
+      - key: PAYMENT_PROVIDER
+        value: ecpay
+      - key: ECPAY_STAGE
+        value: "1"
     disk:
       name: member-files
       mountPath: /opt/render/project/src/data

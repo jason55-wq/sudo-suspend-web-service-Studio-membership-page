@@ -21,3 +21,4 @@ class Config:
         "MEMBER_FILES_DIR",
         str(BASE_DIR / "member_files")
     )
+    BASE_URL = os.environ.get("BASE_URL", "")
