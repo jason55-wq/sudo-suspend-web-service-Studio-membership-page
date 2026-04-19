@@ -1,5 +1,6 @@
 ﻿from functools import wraps
 from pathlib import Path
+from typing import Optional
 
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
@@ -349,6 +350,11 @@ def ensure_schema():
     with db.engine.begin() as connection:
         dialect_name = connection.dialect.name
 
+        def column_type(sqlite_type: str, postgres_type: Optional[str] = None) -> str:
+            if dialect_name == "postgresql" and postgres_type:
+                return postgres_type
+            return sqlite_type
+
         def ensure_column(table_name: str, column_name: str, column_definition: str):
             inspector = inspect(connection)
             columns = {column["name"] for column in inspector.get_columns(table_name)}
@@ -373,8 +379,8 @@ def ensure_schema():
         ensure_column("orders", "payment_provider", "payment_provider VARCHAR(30)")
         ensure_column("orders", "merchant_trade_no", "merchant_trade_no VARCHAR(30)")
         ensure_column("orders", "gateway_trade_no", "gateway_trade_no VARCHAR(30)")
-        ensure_column("orders", "paid_at", "paid_at DATETIME")
-        ensure_column("orders", "approved_at", "approved_at DATETIME")
+        ensure_column("orders", "paid_at", f"paid_at {column_type('DATETIME', 'TIMESTAMP')}")
+        ensure_column("orders", "approved_at", f"approved_at {column_type('DATETIME', 'TIMESTAMP')}")
         ensure_column("orders", "payment_raw_payload", "payment_raw_payload TEXT")
         ensure_column("orders", "buyer_name", "buyer_name VARCHAR(120) NOT NULL DEFAULT ''")
         ensure_column("orders", "buyer_phone", "buyer_phone VARCHAR(40) NOT NULL DEFAULT ''")

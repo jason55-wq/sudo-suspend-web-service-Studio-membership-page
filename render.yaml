@@ -1,8 +1,3 @@
-databases:
-  - name: member-downloads-db
-    databaseName: member_downloads
-    user: member_downloads
-
 services:
   - type: web
     name: member-downloads
@@ -16,9 +11,7 @@ services:
       - key: WEB_CONCURRENCY
         value: "1"
       - key: DATABASE_URL
-        fromDatabase:
-          name: member-downloads-db
-          property: connectionString
+        value: postgresql://wei_ke_duo_hui_yuan_wang_zhan_user:hDGtVUpuwPDGDkKe3bPrEXqz5hb0SLBu@dpg-d7hoqnnavr4c73f79cig-a.oregon-postgres.render.com/wei_ke_duo_hui_yuan_wang_zhan
       - key: MEMBER_FILES_DIR
         value: /opt/render/project/src/data/member_files
       - key: BASE_URL
