@@ -27,8 +27,6 @@
             <span class="status-tag approved">{{ t("status.approved") }}</span>
           {% elif item.status == "paid" %}
             <span class="status-tag pending">{{ t("status.paid") }}</span>
-          {% elif item.status == "pending_payment" %}
-            <span class="status-tag pending">{{ t("status.pending_payment") }}</span>
           {% elif item.status == "failed" %}
             <span class="status-tag rejected">{{ t("status.failed") }}</span>
           {% elif item.status == "pending" %}
@@ -52,13 +50,6 @@
           {% elif item.status == "paid" %}
             <p class="meta">{{ t("dashboard.paid_hint") }}</p>
             <button class="btn" type="button" disabled>{{ t("status.paid") }}</button>
-          {% elif item.status == "pending_payment" %}
-            <p class="meta">{{ t("dashboard.pending_payment_hint") }}</p>
-            {% if item.order_id %}
-              <a class="btn primary" href="{{ url_for('payment_checkout', order_id=item.order_id) }}">{{ t("purchase.pay_now") }}</a>
-            {% else %}
-              <button class="btn" type="button" disabled>{{ t("purchase.pay_now") }}</button>
-            {% endif %}
           {% elif item.status == "failed" %}
             <p class="meta">{{ t("dashboard.failed_hint") }}</p>
             <form method="post" action="{{ url_for('request_purchase', product_id=item.product.id) }}" class="form">
