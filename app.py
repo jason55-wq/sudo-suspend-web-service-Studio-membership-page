@@ -28,22 +28,46 @@ TRANSLATIONS = {
         "footer.contact_title": "網站負責人聯絡方式",
         "footer.phone": "電話",
         "footer.line": "LINE",
+        "header.tagline": "會員商品中心",
+        "header.browse_hint": "探索商品",
         "index.title": "歡迎來到工作室會員系統",
         "index.subtitle": "這是一個提供會員登入、商品管理與檔案下載的系統。",
         "index.visit_count": "目前瀏覽人次：{count}",
+        "index.kicker": "Studio Digital Store",
+        "index.hero_badge": "會員限定數位商品",
+        "index.feature_fast_title": "快速購買",
+        "index.feature_fast_text": "填寫基本資料後即可送出申請，流程簡單直覺。",
+        "index.feature_assets_title": "數位交付",
+        "index.feature_assets_text": "核准後直接下載，集中管理你的商品與檔案。",
+        "index.feature_member_title": "會員管理",
+        "index.feature_member_text": "登入後即可查看購買狀態、已購商品與下載入口。",
+        "index.cta_primary": "開始購物",
+        "index.cta_secondary": "會員登入",
+        "index.stats_products": "會員商品",
+        "index.stats_delivery": "數位交付",
+        "index.stats_support": "人工審核",
         "auth.login": "登入",
         "auth.register": "註冊",
+        "auth.choice_title": "請先登入或註冊",
+        "auth.choice_text": "使用這項功能前，請先選擇登入既有帳號，或先註冊成為會員。",
+        "auth.choice_login_hint": "已經有會員帳號",
+        "auth.choice_register_hint": "第一次使用，先建立帳號",
         "auth.username": "帳號",
         "auth.password": "密碼",
         "auth.create_account": "建立帳號",
         "register.first_user_hint": "第一個註冊的會員會自動成為管理員，方便建立產品與訂單。",
         "dashboard.products_title": "商品列表",
         "dashboard.products_hint": "先填寫購買人基本資料，再送出購買申請；核准後就能下載。",
+        "dashboard.catalog_badge": "Storefront",
+        "dashboard.catalog_summary": "挑選商品、確認狀態，並直接在同一頁完成申請。",
+        "dashboard.catalog_count": "目前商品數：{count}",
+        "dashboard.owned_badge": "My Library",
         "status.approved": "已核准",
         "status.pending": "審核中",
         "status.rejected": "已拒絕",
         "status.available": "可購買",
         "common.no_description": "尚無商品說明",
+        "common.currency_label": "售價",
         "dashboard.approved_hint": "你已完成購買，可以直接下載。",
         "common.download_file": "下載檔案",
         "dashboard.pending_hint": "購買申請已送出，等待管理員審核。",
@@ -144,22 +168,46 @@ TRANSLATIONS = {
         "footer.contact_title": "Site Contact",
         "footer.phone": "Phone",
         "footer.line": "LINE",
+        "header.tagline": "Member Shop Hub",
+        "header.browse_hint": "Browse Products",
         "index.title": "Welcome to the Studio Membership System",
         "index.subtitle": "A member portal for login, product management, and file downloads.",
         "index.visit_count": "Page visits: {count}",
+        "index.kicker": "Studio Digital Store",
+        "index.hero_badge": "Members-only digital products",
+        "index.feature_fast_title": "Quick Checkout",
+        "index.feature_fast_text": "Submit a request with basic buyer info through a clean and simple flow.",
+        "index.feature_assets_title": "Digital Delivery",
+        "index.feature_assets_text": "Download your files right after approval and keep everything in one place.",
+        "index.feature_member_title": "Member Access",
+        "index.feature_member_text": "Track order status, purchased items, and downloads after login.",
+        "index.cta_primary": "Start Shopping",
+        "index.cta_secondary": "Member Login",
+        "index.stats_products": "Member Products",
+        "index.stats_delivery": "Digital Delivery",
+        "index.stats_support": "Manual Review",
         "auth.login": "Log in",
         "auth.register": "Sign up",
+        "auth.choice_title": "Log in or sign up first",
+        "auth.choice_text": "Choose an existing account to log in, or create a new membership account before using this feature.",
+        "auth.choice_login_hint": "I already have an account",
+        "auth.choice_register_hint": "I'm new here",
         "auth.username": "Username",
         "auth.password": "Password",
         "auth.create_account": "Create account",
         "register.first_user_hint": "The first registered account becomes an admin automatically so products and orders can be managed right away.",
         "dashboard.products_title": "Products",
         "dashboard.products_hint": "Fill in the buyer details first, then submit a purchase request. You can download after approval.",
+        "dashboard.catalog_badge": "Storefront",
+        "dashboard.catalog_summary": "Browse products, check status, and submit requests from the same page.",
+        "dashboard.catalog_count": "Products available: {count}",
+        "dashboard.owned_badge": "My Library",
         "status.approved": "Approved",
         "status.pending": "Pending",
         "status.rejected": "Rejected",
         "status.available": "Available",
         "common.no_description": "No product description yet.",
+        "common.currency_label": "Price",
         "dashboard.approved_hint": "Your purchase is approved and ready to download.",
         "common.download_file": "Download file",
         "dashboard.pending_hint": "Your purchase request has been submitted and is awaiting admin approval.",
@@ -306,6 +354,12 @@ def register_routes(app):
         if lang not in SUPPORTED_LANGUAGES:
             lang = DEFAULT_LANGUAGE
         return lang
+
+    def get_safe_next_url(default_endpoint: str = "dashboard") -> str:
+        next_url = request.values.get("next", "").strip()
+        if next_url.startswith("/") and not next_url.startswith("//"):
+            return next_url
+        return url_for(default_endpoint)
 
     def t(key: str, **kwargs) -> str:
         lang = get_locale()
@@ -467,19 +521,20 @@ def register_routes(app):
     @app.route("/register", methods=["GET", "POST"])
     def register():
         if current_user.is_authenticated:
-            return redirect(url_for("dashboard"))
+            return redirect(get_safe_next_url())
 
         if request.method == "POST":
             username = request.form.get("username", "").strip()
             password = request.form.get("password", "")
+            next_url = get_safe_next_url()
 
             if not username or not password:
                 flash(t("flash.enter_username_password"), "error")
-                return render_template("register.html")
+                return render_template("register.html", next_url=next_url)
 
             if User.query.filter_by(username=username).first():
                 flash(t("flash.username_exists"), "error")
-                return render_template("register.html")
+                return render_template("register.html", next_url=next_url)
 
             is_first_user = User.query.count() == 0
             user = User(
@@ -492,33 +547,41 @@ def register_routes(app):
 
             login_user(user)
             flash(t("flash.register_success"), "success")
-            return redirect(url_for("dashboard"))
+            return redirect(next_url)
 
-        return render_template("register.html")
+        return render_template("register.html", next_url=get_safe_next_url())
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if current_user.is_authenticated:
-            return redirect(url_for("dashboard"))
+            return redirect(get_safe_next_url())
 
         if request.method == "POST":
             username = request.form.get("username", "").strip()
             password = request.form.get("password", "")
+            next_url = get_safe_next_url()
 
             user = User.query.filter_by(username=username).first()
             if not user:
                 flash(t("flash.no_member"), "error")
-                return render_template("login.html")
+                return render_template("login.html", next_url=next_url)
 
             if not check_password_hash(user.password_hash, password):
                 flash(t("flash.invalid_credentials"), "error")
-                return render_template("login.html")
+                return render_template("login.html", next_url=next_url)
 
             login_user(user)
             flash(t("flash.login_success"), "success")
-            return redirect(url_for("dashboard"))
+            return redirect(next_url)
 
-        return render_template("login.html")
+        return render_template("login.html", next_url=get_safe_next_url())
+
+    @app.route("/auth-choice")
+    def auth_choice():
+        next_url = get_safe_next_url()
+        if current_user.is_authenticated:
+            return redirect(next_url)
+        return render_template("auth_choice.html", next_url=next_url)
 
     @app.route("/logout")
     @login_required

@@ -2,12 +2,50 @@
 
 {% block content %}
 <section class="hero">
-  <h1>{{ t("index.title") }}</h1>
-  <p>{{ t("index.subtitle") }}</p>
-  <p class="meta"><strong>{{ t("index.visit_count", count=visit_count) }}</strong></p>
-  <div class="actions">
-    <a class="btn primary" href="{{ url_for('register') }}">{{ t("auth.register") }}</a>
-    <a class="btn" href="{{ url_for('login') }}">{{ t("auth.login") }}</a>
+  <div class="hero-copy">
+    <span class="eyebrow">{{ t("index.kicker") }}</span>
+    <h1>{{ t("index.title") }}</h1>
+    <p>{{ t("index.subtitle") }}</p>
+    <p class="meta"><strong>{{ t("index.visit_count", count=visit_count) }}</strong></p>
+    <div class="actions">
+      <a class="btn primary" href="{{ url_for('register') }}">{{ t("index.cta_primary") }}</a>
+      <a class="btn" href="{{ url_for('login') }}">{{ t("index.cta_secondary") }}</a>
+    </div>
   </div>
+  <div class="hero-panel">
+    <div class="hero-stat-card">
+      <span class="hero-stat-label">{{ t("index.stats_products") }}</span>
+      <strong>24/7</strong>
+      <p>{{ t("index.feature_member_text") }}</p>
+    </div>
+    <div class="hero-stat-grid">
+      <article class="mini-card">
+        <span class="mini-card-label">{{ t("index.stats_delivery") }}</span>
+        <strong>{{ t("index.feature_assets_title") }}</strong>
+      </article>
+      <article class="mini-card">
+        <span class="mini-card-label">{{ t("index.stats_support") }}</span>
+        <strong>{{ t("index.feature_fast_title") }}</strong>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="feature-strip">
+  <a class="feature-card feature-link-card" href="{{ url_for('dashboard') ~ '#catalog' if current_user.is_authenticated else url_for('auth_choice', next=url_for('dashboard') ~ '#catalog') }}">
+    <span class="feature-index">01</span>
+    <h2>{{ t("index.feature_fast_title") }}</h2>
+    <p>{{ t("index.feature_fast_text") }}</p>
+  </a>
+  <a class="feature-card feature-link-card" href="{{ url_for('dashboard') ~ '#library' if current_user.is_authenticated else url_for('auth_choice', next=url_for('dashboard') ~ '#library') }}">
+    <span class="feature-index">02</span>
+    <h2>{{ t("index.feature_assets_title") }}</h2>
+    <p>{{ t("index.feature_assets_text") }}</p>
+  </a>
+  <a class="feature-card feature-link-card" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('auth_choice', next=url_for('dashboard')) }}">
+    <span class="feature-index">03</span>
+    <h2>{{ t("index.feature_member_title") }}</h2>
+    <p>{{ t("index.feature_member_text") }}</p>
+  </a>
 </section>
 {% endblock %}
