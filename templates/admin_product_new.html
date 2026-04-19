@@ -3,7 +3,7 @@
 {% block content %}
 <section class="panel">
   <h1>{{ t("admin.product_new.title") }}</h1>
-  <form method="post" class="form">
+  <form method="post" class="form" enctype="multipart/form-data">
     <label>{{ t("admin.product_new.name") }}
       <input type="text" name="name" required>
     </label>
@@ -16,6 +16,10 @@
     <label>{{ t("admin.product_new.file_path") }}
       <input type="text" name="file_path" placeholder="member_files/Git_Tutorial_1.pdf" required>
     </label>
+    <label>{{ t("admin.product_new.image") }}
+      <input type="file" name="image_file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+    </label>
+    <p class="muted">{{ t("admin.product_new.image_hint") }}</p>
     <button class="btn primary" type="submit">{{ t("admin.product_new.submit") }}</button>
   </form>
   <p class="muted">{{ t("admin.product_new.path_hint") }}</p>

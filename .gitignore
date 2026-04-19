@@ -7,3 +7,5 @@ venv/
 env/
 7z/
 .pytest_cache/
+static/uploads/products/*
+!static/uploads/products/default-product.svg

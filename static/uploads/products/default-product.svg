@@ -1,0 +1,22 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Default product image</title>
+  <desc id="desc">A clean placeholder illustration for products without uploaded images.</desc>
+  <rect width="1200" height="800" rx="48" fill="url(#bg)"/>
+  <circle cx="920" cy="140" r="180" fill="#FFFFFF" fill-opacity="0.12"/>
+  <circle cx="180" cy="680" r="230" fill="#FFFFFF" fill-opacity="0.08"/>
+  <rect x="250" y="190" width="700" height="420" rx="36" fill="#FFFFFF" fill-opacity="0.12" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="4"/>
+  <rect x="320" y="270" width="260" height="260" rx="30" fill="#FFFFFF" fill-opacity="0.14"/>
+  <path d="M390 380L450 320L520 400L580 340L610 370V500H390V380Z" fill="#FFFFFF" fill-opacity="0.55"/>
+  <circle cx="450" cy="345" r="28" fill="#FFFFFF" fill-opacity="0.65"/>
+  <path d="M650 305H880" stroke="#FFFFFF" stroke-opacity="0.72" stroke-width="18" stroke-linecap="round"/>
+  <path d="M650 365H820" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="16" stroke-linecap="round"/>
+  <path d="M650 425H900" stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="16" stroke-linecap="round"/>
+  <rect x="650" y="490" width="190" height="52" rx="26" fill="#FFFFFF" fill-opacity="0.2"/>
+  <path d="M0 600C180 520 320 520 520 600C720 680 840 680 1200 560V800H0V600Z" fill="#0F172A" fill-opacity="0.15"/>
+  <defs>
+    <linearGradient id="bg" x1="90" y1="70" x2="1110" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F62FE"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+</svg>

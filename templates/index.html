@@ -48,4 +48,37 @@
     <p>{{ t("index.feature_member_text") }}</p>
   </a>
 </section>
+
+<section class="panel product-showcase" id="catalog">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">{{ t("index.kicker") }}</span>
+      <h2>{{ t("index.products_title") }}</h2>
+      <p class="muted">{{ t("index.products_subtitle") }}</p>
+    </div>
+  </div>
+
+  {% if featured_products %}
+    <div class="grid homepage-products">
+      {% for product in featured_products %}
+        <article class="card homepage-product-card">
+          <div class="homepage-product-image">
+            <img src="{{ product_image_url(product) }}" alt="{{ product.name }}">
+          </div>
+          <div class="homepage-product-body">
+            <h3>{{ product.name }}</h3>
+            <div class="price-line">
+              <span class="price-label">{{ t("common.currency_label") }}</span>
+              <strong>{{ product.price|currency }}</strong>
+            </div>
+            <p>{{ product.description or t("common.no_description") }}</p>
+            <a class="btn primary" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('auth_choice', next=url_for('dashboard') ~ '#catalog') }}">{{ t("index.view_product") }}</a>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="muted">{{ t("index.products_empty") }}</p>
+  {% endif %}
+</section>
 {% endblock %}

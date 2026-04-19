@@ -7,11 +7,13 @@ from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import OperationalError
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 
 from config import Config
 import os
 from extensions import db, login_manager
 from models import Order, OrderItem, Product, SiteStat, User
+from uuid import uuid4
 
 from datetime import datetime
 
@@ -51,6 +53,10 @@ TRANSLATIONS = {
         "index.stats_products": "會員商品",
         "index.stats_delivery": "數位交付",
         "index.stats_support": "人工審核",
+        "index.products_title": "最新商品",
+        "index.products_subtitle": "建立完成的商品會自動顯示在首頁，方便會員直接瀏覽。",
+        "index.products_empty": "目前還沒有可顯示的商品。",
+        "index.view_product": "查看商品",
         "auth.login": "登入",
         "auth.register": "註冊",
         "auth.choice_title": "請先登入或註冊",
@@ -95,6 +101,8 @@ TRANSLATIONS = {
         "admin.product_new.price": "價格",
         "admin.product_new.description": "說明",
         "admin.product_new.file_path": "檔案路徑",
+        "admin.product_new.image": "商品圖片",
+        "admin.product_new.image_hint": "可上傳 jpg、jpeg、png、webp；未上傳時會自動使用預設商品圖片。",
         "admin.product_new.submit": "建立商品",
         "admin.product_new.path_hint": "檔案路徑需放在 member_files/ 底下，例如 member_files/Git_Tutorial_1.pdf 或 member_files/subfolder/manual.pdf。",
         "admin.product_new.existing": "現有商品",
@@ -156,6 +164,7 @@ TRANSLATIONS = {
         "flash.enter_product_price_path": "請輸入產品名稱、價格與檔案路徑。",
         "flash.enter_valid_price": "請輸入有效的產品價格。",
         "flash.product_created": "產品已建立。",
+        "flash.invalid_product_image": "商品圖片只允許 jpg、jpeg、png、webp。",
         "flash.product_deleted": "產品已刪除。",
         "flash.product_price_updated": "產品價格已更新。",
         "flash.select_valid_member_product": "請選擇有效的會員與產品。",
@@ -195,6 +204,10 @@ TRANSLATIONS = {
         "index.stats_products": "Member Products",
         "index.stats_delivery": "Digital Delivery",
         "index.stats_support": "Manual Review",
+        "index.products_title": "Latest Products",
+        "index.products_subtitle": "Products appear on the homepage automatically after they are created.",
+        "index.products_empty": "There are no products to show yet.",
+        "index.view_product": "View product",
         "auth.login": "Log in",
         "auth.register": "Sign up",
         "auth.choice_title": "Log in or sign up first",
@@ -239,6 +252,8 @@ TRANSLATIONS = {
         "admin.product_new.price": "Price",
         "admin.product_new.description": "Description",
         "admin.product_new.file_path": "File path",
+        "admin.product_new.image": "Product image",
+        "admin.product_new.image_hint": "You can upload jpg, jpeg, png, or webp images. A default product image will be used if none is uploaded.",
         "admin.product_new.submit": "Create product",
         "admin.product_new.path_hint": "File paths must stay under member_files/, for example member_files/Git_Tutorial_1.pdf or member_files/subfolder/manual.pdf.",
         "admin.product_new.existing": "Existing Products",
@@ -300,6 +315,7 @@ TRANSLATIONS = {
         "flash.enter_product_price_path": "Please enter the product name, price, and file path.",
         "flash.enter_valid_price": "Please enter a valid product price.",
         "flash.product_created": "Product created.",
+        "flash.invalid_product_image": "Product images can only be jpg, jpeg, png, or webp.",
         "flash.product_deleted": "Product deleted.",
         "flash.product_price_updated": "Product price updated.",
         "flash.select_valid_member_product": "Please select a valid member and product.",
@@ -316,6 +332,8 @@ def create_app():
 
     member_dir = Path(app.config["MEMBER_FILES_DIR"])
     member_dir.mkdir(parents=True, exist_ok=True)
+    product_images_dir = Path(app.config["PRODUCT_IMAGES_DIR"])
+    product_images_dir.mkdir(parents=True, exist_ok=True)
     db.init_app(app)
     login_manager.init_app(app)
 
@@ -367,12 +385,14 @@ def ensure_schema():
         ensure_column("orders", "buyer_phone", "buyer_phone VARCHAR(40) NOT NULL DEFAULT ''")
         ensure_column("orders", "buyer_email", "buyer_email VARCHAR(255) NOT NULL DEFAULT ''")
         ensure_column("products", "price", "price INTEGER NOT NULL DEFAULT 0")
+        ensure_column("products", "image_filename", "image_filename VARCHAR(255)")
         ensure_column("order_items", "unit_price", "unit_price INTEGER NOT NULL DEFAULT 0")
 
         connection.exec_driver_sql(
             "UPDATE orders SET status = 'approved' WHERE status IS NULL OR status = ''"
         )
         connection.exec_driver_sql("UPDATE products SET price = 0 WHERE price IS NULL")
+        connection.exec_driver_sql("UPDATE products SET image_filename = NULL WHERE image_filename = ''")
         connection.exec_driver_sql("UPDATE order_items SET unit_price = 0 WHERE unit_price IS NULL")
 
 
@@ -549,6 +569,25 @@ def register_routes(app):
         order.status = "approved"
         order.approved_at = datetime.utcnow()
 
+    def product_image_url(product: Optional[Product]) -> str:
+        if product and getattr(product, "image_filename", None):
+            return url_for("static", filename=f"uploads/products/{product.image_filename}")
+        return url_for("static", filename="uploads/products/default-product.svg")
+
+    def save_product_image(uploaded_file) -> str:
+        original_name = secure_filename(uploaded_file.filename or "")
+        extension = Path(original_name).suffix.lower()
+        allowed_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+
+        if extension not in allowed_extensions:
+            raise ValueError(t("flash.invalid_product_image"))
+
+        filename = f"{uuid4().hex}{extension}"
+        target_dir = Path(app.config["PRODUCT_IMAGES_DIR"])
+        target_dir.mkdir(parents=True, exist_ok=True)
+        uploaded_file.save(target_dir / filename)
+        return filename
+
     @app.context_processor
     def inject_globals():
         current_lang = get_locale()
@@ -556,6 +595,7 @@ def register_routes(app):
             "app_name": t("app_name"),
             "lang": current_lang,
             "t": t,
+            "product_image_url": product_image_url,
         }
 
     @app.context_processor
@@ -585,7 +625,12 @@ def register_routes(app):
         visit_count = increment_site_visit_count()
         if current_user.is_authenticated:
             return redirect(url_for("dashboard"))
-        return render_template("index.html", visit_count=visit_count)
+        featured_products = Product.query.order_by(Product.created_at.desc()).all()
+        return render_template(
+            "index.html",
+            visit_count=visit_count,
+            featured_products=featured_products,
+        )
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
@@ -754,6 +799,7 @@ def register_routes(app):
             description = request.form.get("description", "").strip()
             price = request.form.get("price", type=int)
             file_path_raw = request.form.get("file_path", "").strip()
+            image_file = request.files.get("image_file")
 
             if not name or not file_path_raw:
                 flash(t("flash.enter_product_price_path"), "error")
@@ -770,11 +816,20 @@ def register_routes(app):
                 flash(str(exc), "error")
                 return render_template("admin_product_new.html")
 
+            image_filename = None
+            if image_file and image_file.filename:
+                try:
+                    image_filename = save_product_image(image_file)
+                except (OSError, ValueError) as exc:
+                    flash(str(exc), "error")
+                    return render_template("admin_product_new.html")
+
             product = Product(
                 name=name,
                 description=description,
                 price=price,
                 file_path=file_path,
+                image_filename=image_filename,
             )
             db.session.add(product)
             db.session.commit()

@@ -25,6 +25,7 @@ class Product(db.Model):
     description = db.Column(db.Text, nullable=True)
     price = db.Column(db.Integer, nullable=False, default=0)
     file_path = db.Column(db.String(255), nullable=False)
+    image_filename = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     order_items = db.relationship("OrderItem", backref="product", lazy=True, cascade="all, delete-orphan")

@@ -21,4 +21,8 @@ class Config:
         "MEMBER_FILES_DIR",
         str(BASE_DIR / "member_files")
     )
+    PRODUCT_IMAGES_DIR = os.environ.get(
+        "PRODUCT_IMAGES_DIR",
+        str(BASE_DIR / "static" / "uploads" / "products")
+    )
     BASE_URL = os.environ.get("BASE_URL", "")
