@@ -1,10 +1,9 @@
 ﻿from functools import wraps
 from pathlib import Path
-from threading import Lock
 
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import OperationalError
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -18,8 +17,6 @@ from datetime import datetime
 
 SUPPORTED_LANGUAGES = {"zh-Hant", "en"}
 DEFAULT_LANGUAGE = "zh-Hant"
-_database_init_lock = Lock()
-_database_initialized = False
 
 TRANSLATIONS = {
     "zh-Hant": {
@@ -340,24 +337,9 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
 
-    def prepare_database() -> None:
-        global _database_initialized
-        if _database_initialized:
-            return
-
-        with _database_init_lock:
-            if _database_initialized:
-                return
-
-            with app.app_context():
-                db.create_all()
-                ensure_schema()
-
-            _database_initialized = True
-
-    @app.before_request
-    def ensure_database_ready():
-        prepare_database()
+    with app.app_context():
+        db.create_all()
+        ensure_schema()
 
     register_routes(app)
     return app
@@ -411,15 +393,15 @@ def ensure_schema():
 
 
 def increment_site_visit_count():
-    stat = SiteStat.query.filter_by(name="home_visits").first()
-    if stat is None:
-        stat = SiteStat(name="home_visits", value=1)
-        db.session.add(stat)
-    else:
-        stat.value += 1
-
+    db.session.execute(text("""
+        INSERT INTO site_stats (name, value)
+        VALUES ('home_visits', 1)
+        ON CONFLICT(name) DO UPDATE SET value = site_stats.value + 1
+    """))
     db.session.commit()
-    return stat.value
+    return db.session.execute(
+        text("SELECT value FROM site_stats WHERE name = 'home_visits'")
+    ).scalar_one()
 
 
 def register_routes(app):
